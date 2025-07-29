@@ -16,7 +16,7 @@ async def quick_test():
     
     try:
         # Usar la URL del servidor SSE
-        client = Client("http://localhost:8001/mcp")
+        client = Client("http://localhost:8001/sse")
         
         async with client:
             print("✅ Conectado exitosamente")
@@ -57,7 +57,7 @@ async def quick_test():
         print(f"❌ Error: {e}")
         print(f"   Tipo de error: {type(e).__name__}")
         print("\n💡 Asegúrate de que:")
-        print("   1. El servidor MCP SSE esté ejecutándose en http://localhost:8001/mcp/")
+        print("   1. El servidor MCP SSE esté ejecutándose en http://localhost:8001/sse/")
         print("   2. Las variables de entorno estén configuradas (SIMPLYBOOK_COMPANY, SIMPLYBOOK_LOGIN, SIMPLYBOOK_PASSWORD)")
         print("   3. El servidor se haya iniciado con: ./start-server-sse.sh")
 

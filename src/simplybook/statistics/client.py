@@ -3,11 +3,10 @@ from datetime import datetime
 import httpx
 
 class StatisticsClient:
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.base_url = "https://user-api-v2.simplybook.me/admin/"
+    def __init__(self, auth_headers: Dict[str, str]):
+        self.base_url = "https://user-api-v2.simplybook.me/admin"
         self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            **auth_headers,
             "Content-Type": "application/json"
         }
 
