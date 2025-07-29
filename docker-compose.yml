@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  simplybook-mcp:
+    build: .
+    container_name: simplybook-mcp
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - SIMPLYBOOK_COMPANY=${SIMPLYBOOK_COMPANY}
+      - SIMPLYBOOK_LOGIN=${SIMPLYBOOK_LOGIN}
+      - SIMPLYBOOK_PASSWORD=${SIMPLYBOOK_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/mcp/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "simplybook": {
+      "command": "python3",
+      "args": ["src/main.py"],
+      "env": {
+        "SIMPLYBOOK_API_KEY": "tu_api_key_aqui",
+        "PYTHONPATH": "/app/src"
+      },
+      "cwd": "/Ubuntu/home/pgallar/Works/simplybook-mcp",
+      "transport": {
+        "type": "http",
+        "url": "http://localhost:8000/mcp/"
+      }
+    }
+  }
+} 

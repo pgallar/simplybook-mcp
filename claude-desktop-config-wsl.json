@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "simplybook": {
+      "command": "wsl",
+      "args": ["-d", "Ubuntu", "-e", "bash", "-c", "cd /home/pgallar/Works/simplybook-mcp && export SIMPLYBOOK_API_KEY=tu_api_key_aqui && python3 src/main.py"],
+      "env": {
+        "SIMPLYBOOK_API_KEY": "tu_api_key_aqui"
+      }
+    }
+  }
+} 
