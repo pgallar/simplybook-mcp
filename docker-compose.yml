@@ -5,7 +5,7 @@ services:
     build: .
     container_name: simplybook-mcp
     ports:
-      - "8000:8000"
+      - "8001:8001"  # SSE port only
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
@@ -15,10 +15,12 @@ services:
       - SIMPLYBOOK_COMPANY=${SIMPLYBOOK_COMPANY}
       - SIMPLYBOOK_LOGIN=${SIMPLYBOOK_LOGIN}
       - SIMPLYBOOK_PASSWORD=${SIMPLYBOOK_PASSWORD}
+      - MCP_HOST=${MCP_HOST:-0.0.0.0}
+      - MCP_PORT=${MCP_PORT:-8001}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/mcp/"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:8001/sse"]
+      interval: 60s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 2
+      start_period: 60s

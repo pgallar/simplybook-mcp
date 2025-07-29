@@ -40,6 +40,16 @@ def get_credentials() -> tuple:
     
     return company, login, password
 
+def get_server_config() -> Dict[str, Any]:
+    """Obtener configuración del servidor SSE desde variables de entorno"""
+    host = os.getenv('MCP_HOST', '0.0.0.0')
+    port = int(os.getenv('MCP_PORT', '8001'))  # Puerto por defecto para SSE
+    
+    return {
+        'host': host,
+        'port': port
+    }
+
 def create_mcp_server() -> FastMCP:
     try:
         mcp = FastMCP("simplybook")
@@ -74,16 +84,25 @@ def register_routers(mcp: FastMCP, company: str, login: str, password: str) -> N
             logger.error(f"Failed to register router {router.__class__.__name__}: {str(e)}")
             raise
 
+async def run_sse_server(mcp: FastMCP, host: str, port: int) -> None:
+    """Ejecuta el servidor SSE"""
+    logger = logging.getLogger(__name__)
+    logger.info(f"Starting SSE server on {host}:{port}")
+    await mcp.run_async(transport="sse", host=host, port=port)
+
 def main() -> None:
     setup_logging()
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info("Initializing SimplyBook MCP server...")
+        logger.info("Initializing SimplyBook MCP server with SSE...")
         
-        # Obtener credenciales
+        # Obtener credenciales y configuración
         company, login, password = get_credentials()
+        config = get_server_config()
+        
         logger.info("Credentials loaded successfully")
+        logger.info(f"SSE Server configuration: {config}")
         
         mcp = create_mcp_server()
         
@@ -91,13 +110,10 @@ def main() -> None:
         register_routers(mcp, company, login, password)
         logger.info("All routers registered successfully")
         
-        logger.info("Starting SimplyBook MCP server on port 8000...")
-        import asyncio
-        
-        async def run_server():
-            await mcp.run_async(transport="http", host="0.0.0.0", port=8000)
-        
-        asyncio.run(run_server())
+        # Ejecutar servidor SSE
+        logger.info(f"Starting SSE server on port {config['port']}...")
+        asyncio.run(run_sse_server(mcp, config['host'], config['port']))
+            
     except Exception as e:
         logger.critical(f"Fatal error: {str(e)}")
         sys.exit(1)
