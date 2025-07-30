@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional, List
 import httpx
 from ..http_client import LoggingHTTPClient
 
@@ -10,26 +10,120 @@ class ServicesClient:
             "Content-Type": "application/json"
         }
 
-    async def get_services_list(self) -> List[Dict[str, Any]]:
+    async def get_services(self, search: Optional[str] = None) -> Dict[str, Any]:
         """
-        Obtener lista de servicios según la documentación de SimplyBook.me
-        Usa getEventList() como se muestra en la documentación
+        Obtener lista de servicios
+        
+        Args:
+            search: Texto de búsqueda
+            
+        Returns:
+            Dict con la lista paginada de servicios
         """
+        params = {}
+        if search:
+            params["filter"] = {"search": search}
+            
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
-            response = await client.get("/services")
+            response = await client.get("/services", params=params)
             response.raise_for_status()
             return response.json()
 
     async def get_service(self, service_id: str) -> Dict[str, Any]:
         """
-        Obtener información de un servicio específico
+        Obtener detalles de un servicio
+        
+        Args:
+            service_id: ID del servicio
+            
+        Returns:
+            Dict con los detalles del servicio
         """
-        # Primero obtener la lista completa y filtrar
-        services = await self.get_services_list()
-        for service in services:
-            if str(service.get('id')) == str(service_id):
-                return service
-        raise ValueError(f"Servicio con ID {service_id} no encontrado")
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get(f"/services/{service_id}")
+            response.raise_for_status()
+            return response.json()
+
+    async def get_service_products(self,
+                                 service_id: str,
+                                 product_type: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Obtener productos asociados a un servicio
+        
+        Args:
+            service_id: ID del servicio
+            product_type: Tipo de producto ('product' o 'attribute')
+            
+        Returns:
+            Dict con la lista de productos y sus cantidades por defecto
+        """
+        params = {
+            "filter": {
+                "service_id": service_id
+            }
+        }
+        
+        if product_type:
+            params["filter"]["type"] = product_type
+            
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/services/products", params=params)
+            response.raise_for_status()
+            return response.json()
+
+    async def create_service(self, service_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Crear un nuevo servicio
+        
+        Args:
+            service_data: Datos del servicio (name, description, price, etc.)
+            
+        Returns:
+            Dict con los detalles del servicio creado
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.post("/services", json=service_data)
+            response.raise_for_status()
+            return response.json()
+
+    async def update_service(self, service_id: str, service_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Actualizar un servicio existente
+        
+        Args:
+            service_id: ID del servicio
+            service_data: Datos actualizados del servicio
+            
+        Returns:
+            Dict con los detalles del servicio actualizado
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.put(f"/services/{service_id}", json=service_data)
+            response.raise_for_status()
+            return response.json()
+
+    async def delete_service(self, service_id: str) -> None:
+        """
+        Eliminar un servicio
+        
+        Args:
+            service_id: ID del servicio
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.delete(f"/services/{service_id}")
+            response.raise_for_status()
+
+    async def get_categories(self) -> List[Dict[str, Any]]:
+        """
+        Obtener lista de categorías
+        
+        Returns:
+            Lista de objetos CategoryEntity
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/categories")
+            response.raise_for_status()
+            return response.json()
 
     async def get_performers_list(self) -> List[Dict[str, Any]]:
         """

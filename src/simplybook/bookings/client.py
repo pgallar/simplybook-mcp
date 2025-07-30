@@ -112,13 +112,19 @@ class BookingsClient:
             return response.json()
 
     async def get_booking_details(self, booking_id: str) -> Dict[str, Any]:
-        """Obtener detalles de una reserva específica"""
-        # Obtener todas las reservas y filtrar por ID
-        bookings = await self.get_all_bookings_simple()  # Actualizado para usar el nuevo nombre
-        for booking in bookings:
-            if str(booking.get('id')) == str(booking_id):
-                return booking
-        raise ValueError(f"Reserva con ID {booking_id} no encontrada")
+        """
+        Obtener detalles de una reserva específica
+        
+        Args:
+            booking_id: ID de la reserva
+            
+        Returns:
+            Dict con los detalles de la reserva
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get(f"/bookings/{booking_id}")
+            response.raise_for_status()
+            return response.json()
 
     async def cancel_booking(self, booking_id: str) -> Dict[str, Any]:
         """Cancelar una reserva"""
@@ -130,36 +136,411 @@ class BookingsClient:
             return response.json()
 
     async def approve_booking(self, booking_id: str) -> Dict[str, Any]:
-        """Aprobar una reserva"""
+        """
+        Aprobar una reserva
+        
+        Args:
+            booking_id: ID de la reserva
+            
+        Returns:
+            Dict con los detalles de la reserva actualizada
+        """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
-            response = await client.post(
+            response = await client.put(
                 f"/bookings/{booking_id}/approve"
             )
             response.raise_for_status()
             return response.json()
 
-    async def get_available_slots(self, service_id: str, date: str) -> Dict[str, Any]:
-        """Obtener horarios disponibles para un servicio en una fecha"""
+    async def set_booking_status(self, booking_id: str, status_id: int) -> Dict[str, Any]:
+        """
+        Aplicar un estado a una reserva
+        
+        Args:
+            booking_id: ID de la reserva
+            status_id: ID del estado a aplicar
+            
+        Returns:
+            Dict con los detalles de la reserva actualizada
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.put(
+                f"/bookings/{booking_id}/status",
+                json={"status_id": status_id}
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def get_booking_links(self, booking_id: str) -> Dict[str, Any]:
+        """
+        Obtener enlaces relacionados con una reserva
+        
+        Args:
+            booking_id: ID de la reserva
+            
+        Returns:
+            Dict con los enlaces de la reserva
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get(f"/bookings/{booking_id}/links")
+            response.raise_for_status()
+            return response.json()
+
+    async def set_booking_comment(self, booking_id: str, comment: str) -> Dict[str, Any]:
+        """
+        Establecer un comentario para una reserva
+        
+        Args:
+            booking_id: ID de la reserva
+            comment: Texto del comentario
+            
+        Returns:
+            Dict con los detalles de la reserva actualizada
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.put(
+                f"/bookings/{booking_id}/comment",
+                json={"comment": comment}
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def get_schedule(self, 
+                         service_id: int,
+                         provider_id: int,
+                         date_from: str,
+                         date_to: str) -> List[Dict[str, Any]]:
+        """
+        Obtener horario para un servicio y proveedor
+        
+        Args:
+            service_id: ID del servicio
+            provider_id: ID del proveedor
+            date_from: Fecha inicial (YYYY-MM-DD)
+            date_to: Fecha final (YYYY-MM-DD)
+            
+        Returns:
+            Lista de objetos WorkDayEntity
+        """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
-                "/time-slots",
+                "/schedule",
                 params={
-                    "event_id": service_id,
+                    "service_id": service_id,
+                    "provider_id": provider_id,
+                    "date_from": date_from,
+                    "date_to": date_to
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def get_slots(self,
+                       service_id: int,
+                       provider_id: int,
+                       date: str) -> List[Dict[str, Any]]:
+        """
+        Obtener slots disponibles para un día específico
+        
+        Args:
+            service_id: ID del servicio
+            provider_id: ID del proveedor
+            date: Fecha (YYYY-MM-DD)
+            
+        Returns:
+            Lista de objetos TimeSlotEntity
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get(
+                "/schedule/slots",
+                params={
+                    "service_id": service_id,
+                    "provider_id": provider_id,
                     "date": date
                 }
             )
             response.raise_for_status()
             return response.json()
 
-    async def get_calendar_data(self, start_date: str, end_date: str) -> Dict[str, Any]:
-        """Obtener datos del calendario para un período"""
+    async def get_available_slots(self,
+                                service_id: int,
+                                provider_id: int,
+                                date: str,
+                                count: Optional[int] = None,
+                                products: Optional[List[int]] = None) -> List[Dict[str, Any]]:
+        """
+        Obtener slots disponibles para reservar
+        
+        Args:
+            service_id: ID del servicio
+            provider_id: ID del proveedor
+            date: Fecha (YYYY-MM-DD)
+            count: Cantidad para reserva grupal
+            products: Lista de IDs de productos adicionales
+            
+        Returns:
+            Lista de objetos TimeSlotEntity
+        """
+        params = {
+            "service_id": service_id,
+            "provider_id": provider_id,
+            "date": date
+        }
+        
+        if count is not None:
+            params["count"] = count
+            
+        if products:
+            params["products"] = products
+            
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
-            response = await client.get(
-                "/bookings",
-                params={
-                    "date_from": start_date,
-                    "date_to": end_date
-                }
-            )
+            response = await client.get("/schedule/available-slots", params=params)
             response.raise_for_status()
             return response.json()
+
+    async def get_first_available_slot(self,
+                                     service_id: int,
+                                     provider_id: int,
+                                     date: str,
+                                     count: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Obtener el primer slot disponible
+        
+        Args:
+            service_id: ID del servicio
+            provider_id: ID del proveedor
+            date: Fecha (YYYY-MM-DD)
+            count: Cantidad para reserva grupal
+            
+        Returns:
+            Objeto TimeSlotEntity
+        """
+        params = {
+            "service_id": service_id,
+            "provider_id": provider_id,
+            "date": date
+        }
+        
+        if count is not None:
+            params["count"] = count
+            
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/schedule/first-available-slot", params=params)
+            response.raise_for_status()
+            return response.json()
+
+    async def get_slots_timeline(self,
+                               service_id: int,
+                               provider_id: int,
+                               date_from: str,
+                               date_to: str,
+                               count: Optional[int] = None,
+                               with_available_slots: bool = False,
+                               booking_id: Optional[int] = None,
+                               product_ids: Optional[List[int]] = None,
+                               skip_min_max_restriction: bool = False) -> List[Dict[str, Any]]:
+        """
+        Obtener timeline de slots por fecha
+        
+        Args:
+            service_id: ID del servicio
+            provider_id: ID del proveedor
+            date_from: Fecha inicial (YYYY-MM-DD)
+            date_to: Fecha final (YYYY-MM-DD)
+            count: Cantidad de reservas
+            with_available_slots: Calcular slots disponibles
+            booking_id: ID de reserva para edición
+            product_ids: Lista de IDs de productos adicionales
+            skip_min_max_restriction: Omitir restricciones min/max
+            
+        Returns:
+            Lista de objetos Timeline_SlotsDateEntity
+        """
+        params = {
+            "service_id": service_id,
+            "provider_id": provider_id,
+            "date_from": date_from,
+            "date_to": date_to,
+            "with_available_slots": 1 if with_available_slots else 0,
+            "skip_min_max_restriction": 1 if skip_min_max_restriction else 0
+        }
+        
+        if count is not None:
+            params["count"] = count
+            
+        if booking_id is not None:
+            params["booking_id"] = booking_id
+            
+        if product_ids:
+            params["product_ids"] = product_ids
+            
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/timeline/slots", params=params)
+            response.raise_for_status()
+            return response.json()
+
+    async def get_calendar_data(self,
+                              mode: str,
+                              upcoming_only: Optional[bool] = None,
+                              status: Optional[str] = None,
+                              services: Optional[List[str]] = None,
+                              providers: Optional[List[str]] = None,
+                              client_id: Optional[str] = None,
+                              date_from: Optional[str] = None,
+                              date_to: Optional[str] = None,
+                              search: Optional[str] = None,
+                              additional_fields: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Obtener datos del calendario con reservas, notas y tiempos de descanso
+        
+        Args:
+            mode: Modo de visualización ('day', 'week', 'provider' o 'service')
+            upcoming_only: Solo reservas futuras
+            status: Estado de las reservas (confirmed/confirmed_pending/pending/canceled)
+            services: Lista de IDs de servicios
+            providers: Lista de IDs de proveedores
+            client_id: ID del cliente
+            date_from: Fecha desde
+            date_to: Fecha hasta
+            search: Texto de búsqueda
+            additional_fields: Campos adicionales para filtrar
+            
+        Returns:
+            Dict con los datos del calendario (Calendar_DataEntity)
+        """
+        params = {
+            "mode": mode
+        }
+        filters = {}
+        
+        if upcoming_only is not None:
+            filters["upcoming_only"] = 1 if upcoming_only else 0
+            
+        if status:
+            filters["status"] = status
+            
+        if services:
+            filters["services"] = services
+            
+        if providers:
+            filters["providers"] = providers
+            
+        if client_id:
+            filters["client_id"] = client_id
+            
+        if date_from:
+            filters["date_from"] = date_from
+            
+        if date_to:
+            filters["date_to"] = date_to
+            
+        if search:
+            filters["search"] = search
+            
+        if additional_fields:
+            filters["additional_fields"] = additional_fields
+            
+        if filters:
+            params["filter"] = filters
+            
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/calendar", params=params)
+            response.raise_for_status()
+            return response.json()
+
+    async def generate_detailed_report(self,
+                                    created_date_from: Optional[str] = None,
+                                    created_date_to: Optional[str] = None,
+                                    date_from: Optional[str] = None,
+                                    date_to: Optional[str] = None,
+                                    event_id: Optional[str] = None,
+                                    unit_group_id: Optional[str] = None,
+                                    client_id: Optional[str] = None,
+                                    booking_type: Optional[str] = None,
+                                    export_columns: Optional[List[str]] = None,
+                                    order_direction: str = "asc",
+                                    order_field: str = "record_date") -> Dict[str, Any]:
+        """
+        Generar reporte detallado
+        
+        Args:
+            created_date_from: Fecha de creación desde
+            created_date_to: Fecha de creación hasta
+            date_from: Fecha desde
+            date_to: Fecha hasta
+            event_id: ID del servicio
+            unit_group_id: ID del proveedor
+            client_id: ID del cliente
+            booking_type: Tipo de reserva ('cancelled' o 'non_cancelled')
+            export_columns: Columnas a exportar
+            order_direction: Dirección de ordenamiento ('asc' o 'desc')
+            order_field: Campo de ordenamiento
+            
+        Returns:
+            Dict con el resultado de la generación del reporte
+        """
+        data = {
+            "filter": {},
+            "export_columns": export_columns or [],
+            "order_direction": order_direction,
+            "order_field": order_field
+        }
+        
+        if created_date_from:
+            data["filter"]["created_date_from"] = created_date_from
+            
+        if created_date_to:
+            data["filter"]["created_date_to"] = created_date_to
+            
+        if date_from:
+            data["filter"]["date_from"] = date_from
+            
+        if date_to:
+            data["filter"]["date_to"] = date_to
+            
+        if event_id:
+            data["filter"]["event_id"] = event_id
+            
+        if unit_group_id:
+            data["filter"]["unit_group_id"] = unit_group_id
+            
+        if client_id:
+            data["filter"]["client_id"] = client_id
+            
+        if booking_type:
+            data["filter"]["booking_type"] = booking_type
+            
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.post("/detailed-report", json=data)
+            response.raise_for_status()
+            return response.json()
+
+    async def get_detailed_report(self, report_id: str) -> Dict[str, Any]:
+        """
+        Obtener reporte detallado por ID
+        
+        Args:
+            report_id: ID del reporte
+            
+        Returns:
+            Dict con los datos del reporte
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get(f"/detailed-report/{report_id}")
+            response.raise_for_status()
+            return response.json()
+
+    async def set_medical_test_status(self, booking_id: str, status: str) -> None:
+        """
+        Establecer estado de prueba médica para una reserva
+        
+        Args:
+            booking_id: ID de la reserva
+            status: Estado ('negative', 'positive', etc.)
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.put(
+                f"/medical-test/status/{booking_id}",
+                json={"status": status}
+            )
+            response.raise_for_status()

@@ -1,7 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..http_client import LoggingHTTPClient
 
-class SubscriptionClient:
+class StatusClient:
     def __init__(self, auth_headers: Dict[str, str]):
         self.base_url = "https://user-api-v2.simplybook.me/admin"
         self.headers = {
@@ -9,14 +9,14 @@ class SubscriptionClient:
             "Content-Type": "application/json"
         }
 
-    async def get_current_subscription(self) -> Dict[str, Any]:
+    async def get_statuses(self) -> List[Dict[str, Any]]:
         """
-        Obtener información de la suscripción actual
+        Obtener lista de estados
         
         Returns:
-            Dict con los detalles de la suscripción actual (CompanyTariffEntity)
+            Lista de objetos StatusEntity
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
-            response = await client.get("/tariff/current")
+            response = await client.get("/statuses")
             response.raise_for_status()
-            return response.json()
+            return response.json() 

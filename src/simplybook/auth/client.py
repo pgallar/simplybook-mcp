@@ -249,3 +249,110 @@ class AuthClient:
             except OSError:
                 return False
         return True
+
+    async def authenticate_2fa(self, company: str, session_id: str, code: str, type_2fa: str) -> Dict[str, Any]:
+        """
+        Autenticación de segundo factor
+        
+        Args:
+            company: Company login
+            session_id: ID de sesión obtenido en el primer paso de autenticación
+            code: Código 2FA
+            type_2fa: Tipo de 2FA ('ga' o 'sms')
+            
+        Returns:
+            Dict con el resultado de la autenticación
+        """
+        await self._rate_limit()
+        
+        async with LoggingHTTPClient(self.base_url, {
+            "Content-Type": "application/json",
+            "User-Agent": "SimplyBook-MCP/1.0"
+        }) as client:
+            response = await client.post(
+                "/admin/auth/2fa",
+                data={
+                    "company": company,
+                    "session_id": session_id,
+                    "code": code,
+                    "type": type_2fa
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def request_sms_code(self, company: str, session_id: str) -> None:
+        """
+        Solicita el código SMS para 2FA
+        
+        Args:
+            company: Company login
+            session_id: ID de sesión obtenido en el primer paso de autenticación
+        """
+        await self._rate_limit()
+        
+        async with LoggingHTTPClient(self.base_url, {
+            "Content-Type": "application/json",
+            "User-Agent": "SimplyBook-MCP/1.0"
+        }) as client:
+            response = await client.get(
+                "/admin/auth/sms",
+                params={
+                    "company": company,
+                    "session_id": session_id
+                }
+            )
+            response.raise_for_status()
+
+    async def refresh_token(self, company: str, refresh_token: str) -> Dict[str, Any]:
+        """
+        Renueva el token usando el refresh token
+        
+        Args:
+            company: Company login
+            refresh_token: Refresh token obtenido en la autenticación
+            
+        Returns:
+            Dict con el nuevo token
+        """
+        await self._rate_limit()
+        
+        async with LoggingHTTPClient(self.base_url, {
+            "Content-Type": "application/json",
+            "User-Agent": "SimplyBook-MCP/1.0"
+        }) as client:
+            response = await client.post(
+                "/admin/auth/refresh-token",
+                data={
+                    "company": company,
+                    "refresh_token": refresh_token
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if "token" in result:
+                self._save_token(company, result["token"])
+            
+            return result
+
+    async def logout(self, company: str, auth_token: str) -> None:
+        """
+        Cierra la sesión y revoca el token
+        
+        Args:
+            company: Company login
+            auth_token: Token a revocar
+        """
+        await self._rate_limit()
+        
+        headers = self.get_auth_headers(company)
+        async with LoggingHTTPClient(self.base_url, headers) as client:
+            response = await client.post(
+                "/admin/auth/logout",
+                data={
+                    "auth_token": auth_token
+                }
+            )
+            response.raise_for_status()
+            self.clear_token(company)

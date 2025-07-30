@@ -1,6 +1,5 @@
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-import httpx
+from typing import Dict, Any
+from ..http_client import LoggingHTTPClient
 
 class StatisticsClient:
     def __init__(self, auth_headers: Dict[str, str]):
@@ -10,31 +9,24 @@ class StatisticsClient:
             "Content-Type": "application/json"
         }
 
-    async def get_statistics(self, 
-                           start_date: str, 
-                           end_date: str, 
-                           provider_id: Optional[str] = None,
-                           service_id: Optional[str] = None) -> Dict[str, Any]:
-        params = {
-            "start_date": start_date,
-            "end_date": end_date
-        }
-        if provider_id:
-            params["provider_id"] = provider_id
-        if service_id:
-            params["service_id"] = service_id
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}statistics",
-                params=params,
-                headers=self.headers
-            )
+    async def get_statistics(self) -> Dict[str, Any]:
+        """
+        Obtener estadísticas generales
+        
+        Returns:
+            Dict con las estadísticas:
+            - Proveedor más popular y número de reservas (últimos 30 días)
+            - Servicio más popular y número de reservas (últimos 30 días)
+            - Número de reservas hoy
+            - Número de reservas esta semana (Lunes-Domingo)
+        """
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/statistics")
             response.raise_for_status()
             return response.json()
 
     async def get_detailed_report(self, report_id: str) -> Dict[str, Any]:
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
                 f"{self.base_url}statistics/reports/{report_id}",
                 headers=self.headers
@@ -43,7 +35,7 @@ class StatisticsClient:
             return response.json()
 
     async def generate_report(self, report_data: Dict[str, Any]) -> Dict[str, Any]:
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post(
                 f"{self.base_url}statistics/reports",
                 json=report_data,
