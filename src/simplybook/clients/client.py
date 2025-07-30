@@ -10,10 +10,10 @@ class ClientsClient:
             "Content-Type": "application/json"
         }
 
-    async def get_clients_list(self, 
-                             page: Optional[int] = None,
-                             on_page: Optional[int] = None,
-                             search: Optional[str] = None) -> Dict[str, Any]:
+    async def get_clients(self, 
+                       page: Optional[int] = None,
+                       on_page: Optional[int] = None,
+                       search: Optional[str] = None) -> Dict[str, Any]:
         """
         Obtener lista de clientes con paginación y filtros
         

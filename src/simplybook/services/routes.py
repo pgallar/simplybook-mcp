@@ -10,18 +10,19 @@ class ServicesRoutes(BaseRoutes):
             description="Obtener lista de servicios disponibles",
             tags={"services", "list"}
         )
-        async def get_services_list() -> Dict[str, Any]:
+        async def get_services(
+            search: Optional[Annotated[str, Field(description="Texto de búsqueda")]] = None
+        ) -> Dict[str, Any]:
             """Obtener lista de servicios disponibles"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                services = await self.client.get_services_list()
+                result = await self.client.get_services(search=search)
                 return {
                     "success": True,
-                    "services": services,
-                    "count": len(services)
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo servicios: {str(e)}"}
@@ -39,74 +40,76 @@ class ServicesRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                service = await self.client.get_service(service_id)
+                result = await self.client.get_service(service_id)
                 return {
                     "success": True,
-                    "service": service
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo servicio: {str(e)}"}
 
         @mcp.tool(
-            description="Obtener lista de performers/proveedores",
-            tags={"performers", "list"}
+            description="Obtener lista de proveedores",
+            tags={"providers", "list"}
         )
-        async def get_performers_list() -> Dict[str, Any]:
-            """Obtener lista de performers/proveedores"""
+        async def get_performers(
+            search: Optional[Annotated[str, Field(description="Texto de búsqueda")]] = None,
+            service_id: Optional[Annotated[str, Field(description="ID del servicio")]] = None
+        ) -> Dict[str, Any]:
+            """Obtener lista de proveedores"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                performers = await self.client.get_performers_list()
+                result = await self.client.get_performers()
                 return {
                     "success": True,
-                    "performers": performers,
-                    "count": len(performers)
+                    "result": result
                 }
             except Exception as e:
-                return {"error": f"Error obteniendo performers: {str(e)}"}
+                return {"error": f"Error obteniendo proveedores: {str(e)}"}
 
         @mcp.tool(
-            description="Obtener el primer día laboral para un performer",
-            tags={"performers", "schedule"}
+            description="Obtener el primer día laboral para un proveedor",
+            tags={"providers", "schedule"}
         )
         async def get_first_working_day(
-            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+            provider_id: Annotated[str, Field(description="ID del proveedor")]
         ) -> Dict[str, Any]:
-            """Obtener el primer día laboral para un performer"""
+            """Obtener el primer día laboral para un proveedor"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                working_day = await self.client.get_first_working_day(performer_id)
+                result = await self.client.get_first_working_day(provider_id)
                 return {
                     "success": True,
-                    "first_working_day": working_day
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo día laboral: {str(e)}"}
 
         @mcp.tool(
-            description="Obtener calendario de trabajo para un performer",
-            tags={"performers", "calendar"}
+            description="Obtener calendario de trabajo para un proveedor",
+            tags={"providers", "calendar"}
         )
         async def get_work_calendar(
             year: Annotated[int, Field(description="Año", ge=2000, le=2100)],
             month: Annotated[int, Field(description="Mes (1-12)", ge=1, le=12)],
-            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+            provider_id: Annotated[str, Field(description="ID del proveedor")]
         ) -> Dict[str, Any]:
-            """Obtener calendario de trabajo para un performer"""
+            """Obtener calendario de trabajo para un proveedor"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                calendar = await self.client.get_work_calendar(year, month, performer_id)
+                result = await self.client.get_work_calendar(year, month, provider_id)
                 return {
                     "success": True,
-                    "work_calendar": calendar
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo calendario: {str(e)}"}
@@ -118,7 +121,7 @@ class ServicesRoutes(BaseRoutes):
         async def get_time_slots(
             date: Annotated[str, Field(description="Fecha (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")],
             service_id: Annotated[str, Field(description="ID del servicio")],
-            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+            provider_id: Annotated[str, Field(description="ID del proveedor")]
         ) -> Dict[str, Any]:
             """Obtener slots de tiempo disponibles"""
             try:
@@ -126,11 +129,10 @@ class ServicesRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                time_slots = await self.client.get_time_slots(date, service_id, performer_id)
+                result = await self.client.get_time_slots(date, service_id, provider_id)
                 return {
                     "success": True,
-                    "time_slots": time_slots,
-                    "count": len(time_slots)
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo slots de tiempo: {str(e)}"}
@@ -149,11 +151,10 @@ class ServicesRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ServicesClient(self.get_auth_headers())
-                bookings = await self.client.get_bookings(date_from, date_to)
+                result = await self.client.get_bookings(date_from, date_to)
                 return {
                     "success": True,
-                    "bookings": bookings,
-                    "count": len(bookings)
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo reservas: {str(e)}"}

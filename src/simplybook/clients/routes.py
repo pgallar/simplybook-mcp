@@ -21,7 +21,7 @@ class ClientsRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ClientsClient(self.get_auth_headers())
-                result = await self.client.get_clients_list(
+                result = await self.client.get_clients(
                     page=page,
                     on_page=on_page,
                     search=search

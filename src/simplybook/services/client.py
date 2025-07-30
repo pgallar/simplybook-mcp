@@ -125,9 +125,9 @@ class ServicesClient:
             response.raise_for_status()
             return response.json()
 
-    async def get_performers_list(self) -> List[Dict[str, Any]]:
+    async def get_performers(self) -> List[Dict[str, Any]]:
         """
-        Obtener lista de performers/proveedores según la documentación
+        Obtener lista de proveedores según la documentación
         Usa getUnitList() como se muestra en la documentación
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
