@@ -1,14 +1,15 @@
 from typing import Dict, Any
 from ..base_routes import BaseRoutes
 from .client import ProvidersClient
-from ..schemas import (
-    PROVIDERS_LIST_SCHEMA,
-    PROVIDER_DETAILS_SCHEMA
-)
+from pydantic import Field
+from typing import Annotated
 
 class ProvidersRoutes(BaseRoutes):
     def register_tools(self, mcp):
-        @mcp.tool(schema=PROVIDERS_LIST_SCHEMA)
+        @mcp.tool(
+            description="Obtener lista de proveedores",
+            tags={"providers", "list"}
+        )
         async def get_providers_list() -> Dict[str, Any]:
             """Obtener lista de proveedores"""
             try:
@@ -25,8 +26,13 @@ class ProvidersRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo proveedores: {str(e)}"}
 
-        @mcp.tool(schema=PROVIDER_DETAILS_SCHEMA)
-        async def get_provider(provider_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener información de un proveedor específico",
+            tags={"providers", "details"}
+        )
+        async def get_provider(
+            provider_id: Annotated[str, Field(description="ID del proveedor")]
+        ) -> Dict[str, Any]:
             """Obtener información de un proveedor específico"""
             try:
                 if not await self.ensure_authenticated():
@@ -41,39 +47,21 @@ class ProvidersRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo proveedor: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["provider_data"],
-            "properties": {
-                "provider_data": {
-                    "type": "object",
-                    "required": ["name"],
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "Nombre del proveedor"
-                        },
-                        "email": {
-                            "type": "string",
-                            "description": "Email del proveedor",
-                            "format": "email"
-                        },
-                        "phone": {
-                            "type": "string",
-                            "description": "Teléfono del proveedor"
-                        },
-                        "services": {
-                            "type": "array",
-                            "description": "Lista de IDs de servicios que ofrece",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
+        @mcp.tool(
+            description="Crear un nuevo proveedor",
+            tags={"providers", "create"}
+        )
+        async def create_provider(
+            provider_data: Annotated[Dict[str, Any], Field(
+                description="Datos del proveedor",
+                example={
+                    "name": "Nombre del Proveedor",
+                    "email": "proveedor@email.com",
+                    "phone": "+1234567890",
+                    "services": ["123", "456"]
                 }
-            }
-        })
-        async def create_provider(provider_data: Dict[str, Any]) -> Dict[str, Any]:
+            )]
+        ) -> Dict[str, Any]:
             """Crear un nuevo proveedor"""
             try:
                 if not await self.ensure_authenticated():
@@ -88,42 +76,22 @@ class ProvidersRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error creando proveedor: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["provider_id", "provider_data"],
-            "properties": {
-                "provider_id": {
-                    "type": "string",
-                    "description": "ID del proveedor a actualizar"
-                },
-                "provider_data": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "Nombre del proveedor"
-                        },
-                        "email": {
-                            "type": "string",
-                            "description": "Email del proveedor",
-                            "format": "email"
-                        },
-                        "phone": {
-                            "type": "string",
-                            "description": "Teléfono del proveedor"
-                        },
-                        "services": {
-                            "type": "array",
-                            "description": "Lista de IDs de servicios que ofrece",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
+        @mcp.tool(
+            description="Actualizar un proveedor existente",
+            tags={"providers", "update"}
+        )
+        async def update_provider(
+            provider_id: Annotated[str, Field(description="ID del proveedor a actualizar")],
+            provider_data: Annotated[Dict[str, Any], Field(
+                description="Datos actualizados del proveedor",
+                example={
+                    "name": "Nombre Actualizado",
+                    "email": "nuevo@email.com",
+                    "phone": "+0987654321",
+                    "services": ["789", "012"]
                 }
-            }
-        })
-        async def update_provider(provider_id: str, provider_data: Dict[str, Any]) -> Dict[str, Any]:
+            )]
+        ) -> Dict[str, Any]:
             """Actualizar un proveedor existente"""
             try:
                 if not await self.ensure_authenticated():
@@ -138,17 +106,13 @@ class ProvidersRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error actualizando proveedor: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["provider_id"],
-            "properties": {
-                "provider_id": {
-                    "type": "string",
-                    "description": "ID del proveedor a eliminar"
-                }
-            }
-        })
-        async def delete_provider(provider_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Eliminar un proveedor",
+            tags={"providers", "delete"}
+        )
+        async def delete_provider(
+            provider_id: Annotated[str, Field(description="ID del proveedor a eliminar")]
+        ) -> Dict[str, Any]:
             """Eliminar un proveedor"""
             try:
                 if not await self.ensure_authenticated():
@@ -163,17 +127,13 @@ class ProvidersRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error eliminando proveedor: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["provider_id"],
-            "properties": {
-                "provider_id": {
-                    "type": "string",
-                    "description": "ID del proveedor"
-                }
-            }
-        })
-        async def get_provider_locations(provider_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener ubicaciones de un proveedor",
+            tags={"providers", "locations"}
+        )
+        async def get_provider_locations(
+            provider_id: Annotated[str, Field(description="ID del proveedor")]
+        ) -> Dict[str, Any]:
             """Obtener ubicaciones de un proveedor"""
             try:
                 if not await self.ensure_authenticated():

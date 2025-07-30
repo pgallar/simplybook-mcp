@@ -1,14 +1,15 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from ..base_routes import BaseRoutes
 from .client import ServicesClient
-from ..schemas import (
-    SERVICES_LIST_SCHEMA,
-    SERVICE_DETAILS_SCHEMA
-)
+from pydantic import Field
+from typing import Annotated
 
 class ServicesRoutes(BaseRoutes):
     def register_tools(self, mcp):
-        @mcp.tool(schema=SERVICES_LIST_SCHEMA)
+        @mcp.tool(
+            description="Obtener lista de servicios disponibles",
+            tags={"services", "list"}
+        )
         async def get_services_list() -> Dict[str, Any]:
             """Obtener lista de servicios disponibles"""
             try:
@@ -25,8 +26,13 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo servicios: {str(e)}"}
 
-        @mcp.tool(schema=SERVICE_DETAILS_SCHEMA)
-        async def get_service(service_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener información de un servicio específico",
+            tags={"services", "details"}
+        )
+        async def get_service(
+            service_id: Annotated[str, Field(description="ID del servicio")]
+        ) -> Dict[str, Any]:
             """Obtener información de un servicio específico"""
             try:
                 if not await self.ensure_authenticated():
@@ -41,10 +47,10 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo servicio: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "properties": {}  # No requiere parámetros
-        })
+        @mcp.tool(
+            description="Obtener lista de performers/proveedores",
+            tags={"performers", "list"}
+        )
         async def get_performers_list() -> Dict[str, Any]:
             """Obtener lista de performers/proveedores"""
             try:
@@ -61,17 +67,13 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo performers: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["performer_id"],
-            "properties": {
-                "performer_id": {
-                    "type": "string",
-                    "description": "ID del performer/proveedor"
-                }
-            }
-        })
-        async def get_first_working_day(performer_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener el primer día laboral para un performer",
+            tags={"performers", "schedule"}
+        )
+        async def get_first_working_day(
+            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+        ) -> Dict[str, Any]:
             """Obtener el primer día laboral para un performer"""
             try:
                 if not await self.ensure_authenticated():
@@ -86,29 +88,15 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo día laboral: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["year", "month", "performer_id"],
-            "properties": {
-                "year": {
-                    "type": "integer",
-                    "description": "Año",
-                    "minimum": 2000,
-                    "maximum": 2100
-                },
-                "month": {
-                    "type": "integer",
-                    "description": "Mes (1-12)",
-                    "minimum": 1,
-                    "maximum": 12
-                },
-                "performer_id": {
-                    "type": "string",
-                    "description": "ID del performer/proveedor"
-                }
-            }
-        })
-        async def get_work_calendar(year: int, month: int, performer_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener calendario de trabajo para un performer",
+            tags={"performers", "calendar"}
+        )
+        async def get_work_calendar(
+            year: Annotated[int, Field(description="Año", ge=2000, le=2100)],
+            month: Annotated[int, Field(description="Mes (1-12)", ge=1, le=12)],
+            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+        ) -> Dict[str, Any]:
             """Obtener calendario de trabajo para un performer"""
             try:
                 if not await self.ensure_authenticated():
@@ -123,26 +111,15 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo calendario: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "required": ["date", "service_id", "performer_id"],
-            "properties": {
-                "date": {
-                    "type": "string",
-                    "description": "Fecha (YYYY-MM-DD)",
-                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-                },
-                "service_id": {
-                    "type": "string",
-                    "description": "ID del servicio"
-                },
-                "performer_id": {
-                    "type": "string",
-                    "description": "ID del performer/proveedor"
-                }
-            }
-        })
-        async def get_time_slots(date: str, service_id: str, performer_id: str) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener slots de tiempo disponibles",
+            tags={"services", "slots"}
+        )
+        async def get_time_slots(
+            date: Annotated[str, Field(description="Fecha (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")],
+            service_id: Annotated[str, Field(description="ID del servicio")],
+            performer_id: Annotated[str, Field(description="ID del performer/proveedor")]
+        ) -> Dict[str, Any]:
             """Obtener slots de tiempo disponibles"""
             try:
                 if not await self.ensure_authenticated():
@@ -158,22 +135,14 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo slots de tiempo: {str(e)}"}
 
-        @mcp.tool(schema={
-            "type": "object",
-            "properties": {
-                "date_from": {
-                    "type": "string",
-                    "description": "Fecha inicial (YYYY-MM-DD)",
-                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-                },
-                "date_to": {
-                    "type": "string",
-                    "description": "Fecha final (YYYY-MM-DD)",
-                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
-                }
-            }
-        })
-        async def get_bookings(date_from: str = None, date_to: str = None) -> Dict[str, Any]:
+        @mcp.tool(
+            description="Obtener reservas",
+            tags={"bookings", "list"}
+        )
+        async def get_bookings(
+            date_from: Optional[Annotated[str, Field(description="Fecha inicial (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]] = None,
+            date_to: Optional[Annotated[str, Field(description="Fecha final (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]] = None
+        ) -> Dict[str, Any]:
             """Obtener reservas"""
             try:
                 if not await self.ensure_authenticated():
