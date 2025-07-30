@@ -58,7 +58,7 @@ class LoggingHTTPClient:
                 )
             raise
     
-    async def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> httpx.Response:
+    async def post(self, endpoint: str, json: Optional[Dict[str, Any]] = None) -> httpx.Response:
         """Realizar una petición POST con logging"""
         url = f"{self.base_url}{endpoint}"
         start_time = time.time()
@@ -70,11 +70,11 @@ class LoggingHTTPClient:
                 method="POST",
                 url=url,
                 headers=self.headers,
-                data=data
+                data=json
             )
             
             # Realizar la petición
-            response = await self.client.post(url, headers=self.headers, json=data)
+            response = await self.client.post(url, headers=self.headers, json=json)
             
             # Calcular duración
             duration_ms = (time.time() - start_time) * 1000
@@ -104,7 +104,7 @@ class LoggingHTTPClient:
                 )
             raise
     
-    async def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> httpx.Response:
+    async def put(self, endpoint: str, json: Optional[Dict[str, Any]] = None) -> httpx.Response:
         """Realizar una petición PUT con logging"""
         url = f"{self.base_url}{endpoint}"
         start_time = time.time()
@@ -116,11 +116,11 @@ class LoggingHTTPClient:
                 method="PUT",
                 url=url,
                 headers=self.headers,
-                data=data
+                data=json
             )
             
             # Realizar la petición
-            response = await self.client.put(url, headers=self.headers, json=data)
+            response = await self.client.put(url, headers=self.headers, json=json)
             
             # Calcular duración
             duration_ms = (time.time() - start_time) * 1000

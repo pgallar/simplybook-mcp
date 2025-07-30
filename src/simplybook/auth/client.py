@@ -87,7 +87,7 @@ class AuthClient:
                     # Llamada al endpoint de autenticación según la documentación oficial
                     response = await client.post(
                         "/admin/auth",
-                        data={
+                        json={
                             "company": company,
                             "login": login,
                             "password": password
@@ -271,7 +271,7 @@ class AuthClient:
         }) as client:
             response = await client.post(
                 "/admin/auth/2fa",
-                data={
+                json={
                     "company": company,
                     "session_id": session_id,
                     "code": code,
@@ -323,7 +323,7 @@ class AuthClient:
         }) as client:
             response = await client.post(
                 "/admin/auth/refresh-token",
-                data={
+                json={
                     "company": company,
                     "refresh_token": refresh_token
                 }
@@ -350,7 +350,7 @@ class AuthClient:
         async with LoggingHTTPClient(self.base_url, headers) as client:
             response = await client.post(
                 "/admin/auth/logout",
-                data={
+                json={
                     "auth_token": auth_token
                 }
             )
