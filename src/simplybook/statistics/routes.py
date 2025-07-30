@@ -1,28 +1,32 @@
 from typing import Dict, Any
 from ..base_routes import BaseRoutes
+from .client import StatisticsClient
+from pydantic import Field
+from typing import Annotated
 
 class StatisticsRoutes(BaseRoutes):
-    def __init__(self, company: str, login: str, password: str):
-        super().__init__(company, login, password)
-        
     def register_tools(self, mcp):
-        @mcp.tool()
+        @mcp.tool(
+            description="Obtener estadísticas generales",
+            tags={"statistics", "general"}
+        )
         async def get_statistics() -> Dict[str, Any]:
             """
-            Obtener estadísticas
-            
-            Returns:
-                Estadísticas del sistema
+            Obtener estadísticas generales:
+            - Proveedor más popular y número de reservas (últimos 30 días)
+            - Servicio más popular y número de reservas (últimos 30 días)
+            - Número de reservas hoy
+            - Número de reservas esta semana (Lunes-Domingo)
             """
-            if not await self.ensure_authenticated():
-                return {"error": "No se pudo autenticar"}
-                
             try:
-                # Implementar cuando se tenga el cliente correspondiente
+                if not await self.ensure_authenticated():
+                    return {"error": "No se pudo autenticar"}
+                    
+                self.client = StatisticsClient(self.get_auth_headers())
+                result = await self.client.get_statistics()
                 return {
                     "success": True,
-                    "message": "Función en desarrollo",
-                    "statistics": {}
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo estadísticas: {str(e)}"}

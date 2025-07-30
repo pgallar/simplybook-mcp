@@ -1,28 +1,26 @@
 from typing import Dict, Any
 from ..base_routes import BaseRoutes
+from .client import SubscriptionClient
+from pydantic import Field
+from typing import Annotated
 
 class SubscriptionRoutes(BaseRoutes):
-    def __init__(self, company: str, login: str, password: str):
-        super().__init__(company, login, password)
-        
     def register_tools(self, mcp):
-        @mcp.tool()
-        async def get_subscription_info() -> Dict[str, Any]:
-            """
-            Obtener información de la suscripción
-            
-            Returns:
-                Información de la suscripción
-            """
-            if not await self.ensure_authenticated():
-                return {"error": "No se pudo autenticar"}
-                
+        @mcp.tool(
+            description="Obtener información de la suscripción actual",
+            tags={"subscription", "current"}
+        )
+        async def get_current_subscription() -> Dict[str, Any]:
+            """Obtener información de la suscripción actual"""
             try:
-                # Implementar cuando se tenga el cliente correspondiente
+                if not await self.ensure_authenticated():
+                    return {"error": "No se pudo autenticar"}
+                    
+                self.client = SubscriptionClient(self.get_auth_headers())
+                result = await self.client.get_current_subscription()
                 return {
                     "success": True,
-                    "message": "Función en desarrollo",
-                    "subscription": {}
+                    "result": result
                 }
             except Exception as e:
-                return {"error": f"Error obteniendo información de suscripción: {str(e)}"}
+                return {"error": f"Error obteniendo suscripción: {str(e)}"}
