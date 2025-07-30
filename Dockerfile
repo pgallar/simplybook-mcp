@@ -15,12 +15,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
+# Hacer el script de healthcheck ejecutable
+RUN chmod +x /app/healthcheck.sh
+
 # Set environment variables
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8001
 
 # Command to run the application
 CMD ["python", "src/main.py"]

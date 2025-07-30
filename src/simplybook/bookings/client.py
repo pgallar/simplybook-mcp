@@ -1,5 +1,6 @@
 import httpx
 from typing import Optional, Dict, Any, List
+from ..http_client import LoggingHTTPClient
 
 class BookingsClient:
     def __init__(self, auth_headers: Dict[str, str]):
@@ -11,11 +12,8 @@ class BookingsClient:
 
     async def get_bookings_list(self) -> List[Dict[str, Any]]:
         """Obtener lista de reservas"""
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/bookings",
-                headers=self.headers
-            )
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/bookings")
             response.raise_for_status()
             return response.json()
 

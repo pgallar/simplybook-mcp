@@ -1,12 +1,14 @@
 from typing import Dict, Any
 from fastmcp import FastMCP
 from .auth.client import AuthClient
+import os
 
 class BaseRoutes:
-    def __init__(self, company: str, login: str, password: str):
-        self.company = company
-        self.login = login
-        self.password = password
+    def __init__(self, company: str = None, login: str = None, password: str = None):
+        # Usar variables de entorno si no se proporcionan credenciales
+        self.company = company or os.getenv('SIMPLYBOOK_COMPANY')
+        self.login = login or os.getenv('SIMPLYBOOK_LOGIN')
+        self.password = password or os.getenv('SIMPLYBOOK_PASSWORD')
         self.auth_client = AuthClient()
         self.client = None
 
@@ -34,7 +36,13 @@ class BaseRoutes:
                 self.password
             )
             
-            return auth_result["success"]
+            if auth_result["success"]:
+                # Esperar un momento después de la autenticación exitosa
+                import asyncio
+                await asyncio.sleep(1)
+                return True
+            
+            return False
             
         except Exception as e:
             print(f"Error en autenticación: {str(e)}")

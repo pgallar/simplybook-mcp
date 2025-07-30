@@ -5,6 +5,7 @@ import tempfile
 import time
 import asyncio
 from typing import Optional, Dict, Any
+from ..http_client import LoggingHTTPClient
 
 class AuthClient:
     def __init__(self):
@@ -79,18 +80,17 @@ class AuthClient:
             try:
                 await self._rate_limit()
                 
-                async with httpx.AsyncClient(timeout=30.0) as client:
+                async with LoggingHTTPClient(self.base_url, {
+                    "Content-Type": "application/json",
+                    "User-Agent": "SimplyBook-MCP/1.0"
+                }) as client:
                     # Llamada al endpoint de autenticación según la documentación oficial
                     response = await client.post(
-                        self.auth_url,
-                        json={
+                        "/admin/auth",
+                        data={
                             "company": company,
                             "login": login,
                             "password": password
-                        },
-                        headers={
-                            "Content-Type": "application/json",
-                            "User-Agent": "SimplyBook-MCP/1.0"
                         }
                     )
                     
@@ -203,12 +203,9 @@ class AuthClient:
             await self._rate_limit()
             
             headers = self.get_auth_headers(company)
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with LoggingHTTPClient(self.base_url, headers) as client:
                 # Usar un endpoint simple para validar el token
-                response = await client.get(
-                    f"{self.base_url}/admin/events",
-                    headers=headers
-                )
+                response = await client.get("/admin/services")
                 
                 if response.status_code == 200:
                     return {

@@ -15,12 +15,13 @@ services:
       - SIMPLYBOOK_COMPANY=${SIMPLYBOOK_COMPANY}
       - SIMPLYBOOK_LOGIN=${SIMPLYBOOK_LOGIN}
       - SIMPLYBOOK_PASSWORD=${SIMPLYBOOK_PASSWORD}
+      - ENABLE_API_LOGGING=${ENABLE_API_LOGGING:-true}
       - MCP_HOST=${MCP_HOST:-0.0.0.0}
       - MCP_PORT=${MCP_PORT:-8001}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/sse"]
-      interval: 60s
-      timeout: 10s
-      retries: 2
-      start_period: 60s
+      test: ["CMD", "bash", "/app/healthcheck.sh"]
+      interval: 300s
+      timeout: 30s
+      retries: 3
+      start_period: 120s

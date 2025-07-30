@@ -21,6 +21,10 @@ async def quick_test():
         async with client:
             print("✅ Conectado exitosamente")
             
+            # Esperar a que el servidor esté completamente inicializado
+            print("⏳ Esperando inicialización del servidor...")
+            await asyncio.sleep(5)  # Esperar 5 segundos para inicialización completa
+            
             # Verificar que el servidor responde
             await client.ping()
             print("✅ Servidor SSE responde correctamente")

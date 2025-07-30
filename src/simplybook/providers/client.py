@@ -15,7 +15,7 @@ class ProvidersClient:
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/units",
+                f"{self.base_url}/providers",
                 headers=self.headers
             )
             response.raise_for_status()

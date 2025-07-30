@@ -61,7 +61,7 @@ def create_mcp_server() -> FastMCP:
 def register_routers(mcp: FastMCP, company: str, login: str, password: str) -> None:
     logger = logging.getLogger(__name__)
     routers = [
-        AuthRoutes(),
+        # AuthRoutes ya no se registra como herramienta pública
         BookingsRoutes(company, login, password),
         ClientsRoutes(company, login, password),
         ServicesRoutes(company, login, password),
@@ -88,6 +88,11 @@ async def run_sse_server(mcp: FastMCP, host: str, port: int) -> None:
     """Ejecuta el servidor SSE"""
     logger = logging.getLogger(__name__)
     logger.info(f"Starting SSE server on {host}:{port}")
+    
+    # Agregar un delay para asegurar que el servidor esté completamente inicializado
+    await asyncio.sleep(1)
+    logger.info("Server initialization complete, ready to accept connections")
+    
     await mcp.run_async(transport="sse", host=host, port=port)
 
 def main() -> None:

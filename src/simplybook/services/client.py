@@ -1,5 +1,6 @@
 from typing import Dict, Any, List, Optional
 import httpx
+from ..http_client import LoggingHTTPClient
 
 class ServicesClient:
     def __init__(self, auth_headers: Dict[str, str]):
@@ -14,11 +15,8 @@ class ServicesClient:
         Obtener lista de servicios según la documentación de SimplyBook.me
         Usa getEventList() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/events",
-                headers=self.headers
-            )
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/services")
             response.raise_for_status()
             return response.json()
 
@@ -38,11 +36,8 @@ class ServicesClient:
         Obtener lista de performers/proveedores según la documentación
         Usa getUnitList() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/units",
-                headers=self.headers
-            )
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/providers")
             response.raise_for_status()
             return response.json()
 
@@ -119,12 +114,8 @@ class ServicesClient:
         if date_to:
             params["date_to"] = date_to
             
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/bookings",
-                headers=self.headers,
-                params=params
-            )
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
+            response = await client.get("/bookings", params=params)
             response.raise_for_status()
             return response.json()
 
