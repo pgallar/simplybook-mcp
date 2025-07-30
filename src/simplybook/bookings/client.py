@@ -10,8 +10,8 @@ class BookingsClient:
             "Content-Type": "application/json"
         }
 
-    async def get_bookings_list(self) -> List[Dict[str, Any]]:
-        """Obtener lista de reservas (método básico)"""
+    async def get_all_bookings_simple(self) -> List[Dict[str, Any]]:
+        """Obtener lista básica de reservas sin filtros"""
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get("/bookings")
             response.raise_for_status()
@@ -93,22 +93,20 @@ class BookingsClient:
 
     async def create_booking(self, booking_data: Dict[str, Any]) -> Dict[str, Any]:
         """Crear una nueva reserva"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post(
-                f"{self.base_url}/bookings", 
-                json=booking_data,
-                headers=self.headers
+                "/bookings", 
+                json=booking_data
             )
             response.raise_for_status()
             return response.json()
 
     async def edit_booking(self, booking_id: str, booking_data: Dict[str, Any]) -> Dict[str, Any]:
         """Editar una reserva existente"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.put(
-                f"{self.base_url}/bookings/{booking_id}",
-                json=booking_data,
-                headers=self.headers
+                f"/bookings/{booking_id}",
+                json=booking_data
             )
             response.raise_for_status()
             return response.json()
@@ -116,7 +114,7 @@ class BookingsClient:
     async def get_booking_details(self, booking_id: str) -> Dict[str, Any]:
         """Obtener detalles de una reserva específica"""
         # Obtener todas las reservas y filtrar por ID
-        bookings = await self.get_bookings_list()
+        bookings = await self.get_all_bookings_simple()  # Actualizado para usar el nuevo nombre
         for booking in bookings:
             if str(booking.get('id')) == str(booking_id):
                 return booking
@@ -124,48 +122,44 @@ class BookingsClient:
 
     async def cancel_booking(self, booking_id: str) -> Dict[str, Any]:
         """Cancelar una reserva"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.delete(
-                f"{self.base_url}/bookings/{booking_id}",
-                headers=self.headers
+                f"/bookings/{booking_id}"
             )
             response.raise_for_status()
             return response.json()
 
     async def approve_booking(self, booking_id: str) -> Dict[str, Any]:
         """Aprobar una reserva"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post(
-                f"{self.base_url}/bookings/{booking_id}/approve",
-                headers=self.headers
+                f"/bookings/{booking_id}/approve"
             )
             response.raise_for_status()
             return response.json()
 
     async def get_available_slots(self, service_id: str, date: str) -> Dict[str, Any]:
         """Obtener horarios disponibles para un servicio en una fecha"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
-                f"{self.base_url}/time-slots",
+                "/time-slots",
                 params={
                     "event_id": service_id,
                     "date": date
-                },
-                headers=self.headers
+                }
             )
             response.raise_for_status()
             return response.json()
 
     async def get_calendar_data(self, start_date: str, end_date: str) -> Dict[str, Any]:
         """Obtener datos del calendario para un período"""
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
-                f"{self.base_url}/bookings",
+                "/bookings",
                 params={
                     "date_from": start_date,
                     "date_to": end_date
-                },
-                headers=self.headers
+                }
             )
             response.raise_for_status()
             return response.json()

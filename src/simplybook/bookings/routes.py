@@ -6,15 +6,18 @@ from typing import Annotated
 
 class BookingsRoutes(BaseRoutes):
     def register_tools(self, mcp):
-        @mcp.tool()
-        async def get_bookings_list() -> Dict[str, Any]:
-            """Obtener lista de reservas (método básico)"""
+        @mcp.tool(
+            description="Obtener lista básica de reservas sin filtros",
+            tags={"bookings", "list", "basic"}
+        )
+        async def get_all_bookings_simple() -> Dict[str, Any]:
+            """Obtener lista básica de reservas sin filtros"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = BookingsClient(self.get_auth_headers())
-                bookings = await self.client.get_bookings_list()
+                bookings = await self.client.get_all_bookings_simple()
                 return {
                     "success": True,
                     "bookings": bookings,
