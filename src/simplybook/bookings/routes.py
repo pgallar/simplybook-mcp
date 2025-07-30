@@ -89,21 +89,94 @@ class BookingsRoutes(BaseRoutes):
             tags={"bookings", "create"}
         )
         async def create_booking(
-            booking_data: Annotated[Dict[str, Any], Field(
-                description="Datos de la reserva",
-                example={
-                    "service_id": "123",
-                    "start_datetime": "2024-03-20 10:00:00",
-                    "client_id": "456",
-                    "provider_id": "789",
-                    "notes": "Notas adicionales"
-                }
-            )]
+            service_id: Annotated[str, Field(description="ID del servicio")],
+            provider_id: Annotated[str, Field(description="ID del proveedor")],
+            client_id: Annotated[str, Field(description="ID del cliente")],
+            start_datetime: Annotated[str, Field(description="Fecha y hora de inicio (YYYY-MM-DD HH:mm:ss)", pattern="^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$")],
+            location_id: Optional[Annotated[int, Field(description="ID de la ubicación")]] = None,
+            category_id: Optional[Annotated[int, Field(description="ID de la categoría")]] = None,
+            count: Optional[Annotated[int, Field(description="Cantidad para reserva grupal", ge=1)]] = 1,
+            additional_fields: Optional[Annotated[List[Dict[str, Any]], Field(
+                description="Lista de valores de campos adicionales",
+                example=[
+                    {"field": "field_id_1", "value": "value_1"},
+                    {"field": "field_id_2", "value": "value_2"}
+                ]
+            )]] = None,
+            products: Optional[Annotated[List[Dict[str, Any]], Field(
+                description="Lista de productos/addons",
+                example=[
+                    {"product_id": 1, "qty": 1},
+                    {"product_id": 2, "qty": 2}
+                ]
+            )]] = None,
+            client_membership_id: Optional[Annotated[int, Field(description="ID de membresía del cliente")]] = None,
+            skip_membership: Optional[Annotated[bool, Field(description="No usar membresía para esta reserva")]] = None,
+            user_status_id: Optional[Annotated[int, Field(description="ID del estado del usuario")]] = None,
+            accept_payment: Optional[Annotated[bool, Field(description="Generar orden de pago para la reserva")]] = None,
+            payment_processor: Optional[Annotated[str, Field(description="Procesador de pago aceptado")]] = None
         ) -> Dict[str, Any]:
-            """Crear una nueva reserva"""
+            """
+            Crear una nueva reserva
+            
+            Args:
+                service_id: ID del servicio
+                provider_id: ID del proveedor
+                client_id: ID del cliente
+                start_datetime: Fecha y hora de inicio (YYYY-MM-DD HH:mm:ss)
+                location_id: ID de la ubicación (opcional)
+                category_id: ID de la categoría (opcional)
+                count: Cantidad para reserva grupal (opcional, default 1)
+                additional_fields: Lista de valores de campos adicionales (opcional)
+                products: Lista de productos/addons (opcional)
+                client_membership_id: ID de membresía del cliente (opcional)
+                skip_membership: No usar membresía para esta reserva (opcional)
+                user_status_id: ID del estado del usuario (opcional)
+                accept_payment: Generar orden de pago para la reserva (opcional)
+                payment_processor: Procesador de pago aceptado (opcional)
+                
+            Returns:
+                BookingResultEntity con el resultado de la reserva
+            """
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
+                    
+                # Construir los datos de la reserva según el formato AdminBookingBuildEntity
+                booking_data = {
+                    "service_id": service_id,
+                    "provider_id": provider_id,
+                    "client_id": client_id,
+                    "start_datetime": start_datetime,
+                    "count": count
+                }
+                
+                if location_id is not None:
+                    booking_data["location_id"] = location_id
+                    
+                if category_id is not None:
+                    booking_data["category_id"] = category_id
+                    
+                if additional_fields:
+                    booking_data["additional_fields"] = additional_fields
+                    
+                if products:
+                    booking_data["products"] = products
+                    
+                if client_membership_id is not None:
+                    booking_data["client_membership_id"] = client_membership_id
+                    
+                if skip_membership is not None:
+                    booking_data["skip_membership"] = skip_membership
+                    
+                if user_status_id is not None:
+                    booking_data["user_status_id"] = user_status_id
+                    
+                if accept_payment is not None:
+                    booking_data["accept_payment"] = accept_payment
+                    
+                if payment_processor:
+                    booking_data["payment_processor"] = payment_processor
                     
                 self.client = BookingsClient(self.get_auth_headers())
                 result = await self.client.create_booking(booking_data)
