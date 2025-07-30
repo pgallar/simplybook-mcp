@@ -1,6 +1,16 @@
 from typing import Dict, Any
 from ..base_routes import BaseRoutes
 from .client import BookingsClient
+from ..schemas import (
+    BOOKING_LIST_SCHEMA,
+    BOOKING_CREATE_SCHEMA,
+    BOOKING_EDIT_SCHEMA,
+    BOOKING_DETAILS_SCHEMA,
+    BOOKING_CANCEL_SCHEMA,
+    BOOKING_APPROVE_SCHEMA,
+    AVAILABLE_SLOTS_SCHEMA,
+    CALENDAR_DATA_SCHEMA
+)
 
 class BookingsRoutes(BaseRoutes):
     def register_tools(self, mcp):
@@ -21,7 +31,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo reservas: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_LIST_SCHEMA)
         async def get_booking_list(page: int = None, 
                                   on_page: int = None,
                                   upcoming_only: bool = None,
@@ -74,7 +84,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo reservas filtradas: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_CREATE_SCHEMA)
         async def create_booking(booking_data: Dict[str, Any]) -> Dict[str, Any]:
             """Crear una nueva reserva"""
             try:
@@ -90,7 +100,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error creando reserva: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_EDIT_SCHEMA)
         async def edit_booking(booking_id: str, booking_data: Dict[str, Any]) -> Dict[str, Any]:
             """Editar una reserva existente"""
             try:
@@ -106,7 +116,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error editando reserva: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_DETAILS_SCHEMA)
         async def get_booking_details(booking_id: str) -> Dict[str, Any]:
             """Obtener detalles de una reserva específica"""
             try:
@@ -122,7 +132,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo detalles de reserva: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_CANCEL_SCHEMA)
         async def cancel_booking(booking_id: str) -> Dict[str, Any]:
             """Cancelar una reserva"""
             try:
@@ -138,7 +148,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error cancelando reserva: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=BOOKING_APPROVE_SCHEMA)
         async def approve_booking(booking_id: str) -> Dict[str, Any]:
             """Aprobar una reserva"""
             try:
@@ -154,7 +164,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error aprobando reserva: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=AVAILABLE_SLOTS_SCHEMA)
         async def get_available_slots(service_id: str, date: str) -> Dict[str, Any]:
             """Obtener horarios disponibles para un servicio en una fecha"""
             try:
@@ -170,7 +180,7 @@ class BookingsRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo horarios: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=CALENDAR_DATA_SCHEMA)
         async def get_calendar_data(start_date: str, end_date: str) -> Dict[str, Any]:
             """Obtener datos del calendario para un período"""
             try:

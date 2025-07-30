@@ -1,10 +1,14 @@
 from typing import Dict, Any
 from ..base_routes import BaseRoutes
 from .client import ServicesClient
+from ..schemas import (
+    SERVICES_LIST_SCHEMA,
+    SERVICE_DETAILS_SCHEMA
+)
 
 class ServicesRoutes(BaseRoutes):
     def register_tools(self, mcp):
-        @mcp.tool()
+        @mcp.tool(schema=SERVICES_LIST_SCHEMA)
         async def get_services_list() -> Dict[str, Any]:
             """Obtener lista de servicios disponibles"""
             try:
@@ -21,7 +25,7 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo servicios: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema=SERVICE_DETAILS_SCHEMA)
         async def get_service(service_id: str) -> Dict[str, Any]:
             """Obtener información de un servicio específico"""
             try:
@@ -37,7 +41,10 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo servicio: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema={
+            "type": "object",
+            "properties": {}  # No requiere parámetros
+        })
         async def get_performers_list() -> Dict[str, Any]:
             """Obtener lista de performers/proveedores"""
             try:
@@ -54,7 +61,16 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo performers: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema={
+            "type": "object",
+            "required": ["performer_id"],
+            "properties": {
+                "performer_id": {
+                    "type": "string",
+                    "description": "ID del performer/proveedor"
+                }
+            }
+        })
         async def get_first_working_day(performer_id: str) -> Dict[str, Any]:
             """Obtener el primer día laboral para un performer"""
             try:
@@ -70,7 +86,28 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo día laboral: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema={
+            "type": "object",
+            "required": ["year", "month", "performer_id"],
+            "properties": {
+                "year": {
+                    "type": "integer",
+                    "description": "Año",
+                    "minimum": 2000,
+                    "maximum": 2100
+                },
+                "month": {
+                    "type": "integer",
+                    "description": "Mes (1-12)",
+                    "minimum": 1,
+                    "maximum": 12
+                },
+                "performer_id": {
+                    "type": "string",
+                    "description": "ID del performer/proveedor"
+                }
+            }
+        })
         async def get_work_calendar(year: int, month: int, performer_id: str) -> Dict[str, Any]:
             """Obtener calendario de trabajo para un performer"""
             try:
@@ -86,7 +123,25 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo calendario: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema={
+            "type": "object",
+            "required": ["date", "service_id", "performer_id"],
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "description": "Fecha (YYYY-MM-DD)",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "service_id": {
+                    "type": "string",
+                    "description": "ID del servicio"
+                },
+                "performer_id": {
+                    "type": "string",
+                    "description": "ID del performer/proveedor"
+                }
+            }
+        })
         async def get_time_slots(date: str, service_id: str, performer_id: str) -> Dict[str, Any]:
             """Obtener slots de tiempo disponibles"""
             try:
@@ -103,7 +158,21 @@ class ServicesRoutes(BaseRoutes):
             except Exception as e:
                 return {"error": f"Error obteniendo slots de tiempo: {str(e)}"}
 
-        @mcp.tool()
+        @mcp.tool(schema={
+            "type": "object",
+            "properties": {
+                "date_from": {
+                    "type": "string",
+                    "description": "Fecha inicial (YYYY-MM-DD)",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "date_to": {
+                    "type": "string",
+                    "description": "Fecha final (YYYY-MM-DD)",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                }
+            }
+        })
         async def get_bookings(date_from: str = None, date_to: str = None) -> Dict[str, Any]:
             """Obtener reservas"""
             try:
