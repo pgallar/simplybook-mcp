@@ -48,14 +48,14 @@ class NotesRoutes(BaseRoutes):
             tags={"notes", "create"}
         )
         async def create_note(
-            provider_id: Optional[Annotated[str, Field(description="ID del proveedor")]] = None,
-            service_id: Optional[Annotated[str, Field(description="ID del servicio")]] = None,
             start_date_time: Annotated[str, Field(description="Fecha y hora de inicio (YYYY-MM-DD HH:mm:ss)")],
             end_date_time: Annotated[str, Field(description="Fecha y hora de fin (YYYY-MM-DD HH:mm:ss)")],
             note_type_id: Annotated[str, Field(description="ID del tipo de nota")],
             note: Annotated[str, Field(description="Texto de la nota")],
             mode: Annotated[str, Field(description="Modo de la nota ('service', 'provider' o 'all')")],
-            time_blocked: Annotated[bool, Field(description="Si el tiempo está bloqueado")]
+            time_blocked: Annotated[bool, Field(description="Si el tiempo está bloqueado")],
+            provider_id: Optional[Annotated[str, Field(description="ID del proveedor")]] = None,
+            service_id: Optional[Annotated[str, Field(description="ID del servicio")]] = None
         ) -> Dict[str, Any]:
             """Crear una nueva nota"""
             try:
@@ -63,8 +63,6 @@ class NotesRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 note_data = {
-                    "provider_id": provider_id,
-                    "service_id": service_id,
                     "start_date_time": start_date_time,
                     "end_date_time": end_date_time,
                     "note_type_id": note_type_id,
@@ -72,6 +70,11 @@ class NotesRoutes(BaseRoutes):
                     "mode": mode,
                     "time_blocked": time_blocked
                 }
+                
+                if provider_id is not None:
+                    note_data["provider_id"] = provider_id
+                if service_id is not None:
+                    note_data["service_id"] = service_id
                 
                 self.client = NotesClient(self.get_auth_headers())
                 result = await self.client.create_note(note_data)
