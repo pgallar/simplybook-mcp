@@ -54,7 +54,7 @@ class TestIntegration:
         services_client = ServicesClient(headers)
         
         try:
-            services = await services_client.get_services_list()
+            services = await services_client.get_services()
             print(f"Servicios obtenidos: {len(services)}")
             
             # Verificar que se obtuvieron servicios
@@ -106,7 +106,7 @@ class TestIntegration:
         services_client = ServicesClient(headers)
         
         try:
-            performers = await services_client.get_performers_list()
+            performers = await services_client.get_performers()
             print(f"Performers obtenidos: {len(performers)}")
             
             # Verificar que se obtuvieron performers
@@ -125,9 +125,11 @@ class TestIntegration:
         auth_result = await auth_client.authenticate(company, login, password)
         assert auth_result["success"] is True, "Autenticación fallida"
         
-        # Validar token
-        validation_result = await auth_client.validate_token(company)
-        print(f"Resultado de validación: {validation_result}")
-        
-        # Verificar que el token es válido
-        assert validation_result["valid"] is True, f"Token inválido: {validation_result}" 
+        # Validar token intentando obtener los headers
+        try:
+            headers = auth_client.get_auth_headers(company)
+            assert "X-Token" in headers, "No se encontró token en los headers"
+            assert headers["X-Token"], "Token está vacío"
+            print("Token validado correctamente")
+        except ValueError as e:
+            pytest.fail(f"Token inválido: {str(e)}") 

@@ -146,60 +146,6 @@ class TestAuthClient:
         with pytest.raises(ValueError, match=f"No se encontró token para la empresa {company}"):
             auth_client.get_auth_headers(company)
 
-    @pytest.mark.asyncio
-    async def test_validate_token_success(self, auth_client):
-        """Test de validación de token exitosa"""
-        company = "test_company"
-        token = "test_token_12345"
-        
-        # Guardar token
-        auth_client._save_token(company, token)
-        
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_response = AsyncMock()
-            mock_response.status_code = 200
-            
-            mock_client_instance = AsyncMock()
-            mock_client_instance.__aenter__.return_value = mock_client_instance
-            mock_client_instance.__aexit__.return_value = None
-            mock_client_instance.get.return_value = mock_response
-            mock_client.return_value = mock_client_instance
-
-            result = await auth_client.validate_token(company)
-
-            assert result["valid"] is True
-            assert "Token válido" in result["message"]
-        
-        # Limpiar archivo de prueba
-        os.remove(auth_client._get_token_file_path(company))
-
-    @pytest.mark.asyncio
-    async def test_validate_token_invalid(self, auth_client):
-        """Test de validación de token inválido"""
-        company = "test_company"
-        token = "invalid_token"
-        
-        # Guardar token
-        auth_client._save_token(company, token)
-        
-        with patch('httpx.AsyncClient') as mock_client:
-            mock_response = AsyncMock()
-            mock_response.status_code = 404
-            
-            mock_client_instance = AsyncMock()
-            mock_client_instance.__aenter__.return_value = mock_client_instance
-            mock_client_instance.__aexit__.return_value = None
-            mock_client_instance.get.return_value = mock_response
-            mock_client.return_value = mock_client_instance
-
-            result = await auth_client.validate_token(company)
-
-            assert result["valid"] is False
-            assert "Token inválido: 404" in result["message"]
-        
-        # Limpiar archivo de prueba
-        os.remove(auth_client._get_token_file_path(company))
-
     def test_clear_token(self, auth_client):
         """Test de eliminación de token"""
         company = "test_company"

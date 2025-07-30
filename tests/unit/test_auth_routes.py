@@ -79,14 +79,14 @@ class TestAuthRoutes:
     @pytest.mark.asyncio
     async def test_validate_token_success(self, auth_routes, mock_mcp):
         """Test de validación de token exitosa"""
-        # Mock del resultado de validación
-        mock_result = {
-            "valid": True,
-            "message": "Token válido"
+        # Mock de get_auth_headers exitoso
+        mock_headers = {
+            "X-Company-Login": "test_company",
+            "X-Token": "test_token_12345"
         }
         
-        with patch.object(auth_routes.auth_client, 'validate_token', return_value=mock_result):
-            result = await auth_routes.auth_client.validate_token("test_company")
+        with patch.object(auth_routes.auth_client, 'get_auth_headers', return_value=mock_headers):
+            result = await auth_routes.validate_token_internal("test_company")
             
             assert result["valid"] is True
             assert "Token válido" in result["message"]
@@ -94,17 +94,15 @@ class TestAuthRoutes:
     @pytest.mark.asyncio
     async def test_validate_token_invalid(self, auth_routes, mock_mcp):
         """Test de validación de token inválido"""
-        # Mock del resultado de validación inválida
-        mock_result = {
-            "valid": False,
-            "message": "Token inválido: 404"
-        }
+        # Mock de get_auth_headers que lanza ValueError
+        def mock_get_headers(*args, **kwargs):
+            raise ValueError("No se encontró token")
         
-        with patch.object(auth_routes.auth_client, 'validate_token', return_value=mock_result):
-            result = await auth_routes.auth_client.validate_token("test_company")
+        with patch.object(auth_routes.auth_client, 'get_auth_headers', side_effect=mock_get_headers):
+            result = await auth_routes.validate_token_internal("test_company")
             
             assert result["valid"] is False
-            assert "Token inválido: 404" in result["message"]
+            assert "Token no encontrado o expirado" in result["message"]
 
     @pytest.mark.asyncio
     async def test_clear_token_success(self, auth_routes, mock_mcp):
@@ -125,30 +123,27 @@ class TestAuthRoutes:
     @pytest.mark.asyncio
     async def test_get_auth_status_authenticated(self, auth_routes, mock_mcp):
         """Test de estado de autenticación cuando está autenticado"""
-        # Mock del resultado de validación
-        mock_validation = {
-            "valid": True,
-            "message": "Token válido"
+        # Mock de get_auth_headers exitoso
+        mock_headers = {
+            "X-Company-Login": "test_company",
+            "X-Token": "test_token_12345"
         }
         
-        with patch.object(auth_routes.auth_client, 'validate_token', return_value=mock_validation):
-            with patch.object(auth_routes.auth_client, '_get_token_file_path', return_value="/tmp/test.json"):
-                result = await auth_routes.auth_client.validate_token("test_company")
-                
-                assert result["valid"] is True
-                assert "Token válido" in result["message"]
+        with patch.object(auth_routes.auth_client, 'get_auth_headers', return_value=mock_headers):
+            result = await auth_routes.validate_token_internal("test_company")
+            
+            assert result["valid"] is True
+            assert "Token válido" in result["message"]
 
     @pytest.mark.asyncio
     async def test_get_auth_status_not_authenticated(self, auth_routes, mock_mcp):
         """Test de estado de autenticación cuando no está autenticado"""
-        # Mock del resultado de validación
-        mock_validation = {
-            "valid": False,
-            "message": "Token inválido"
-        }
+        # Mock de get_auth_headers que lanza ValueError
+        def mock_get_headers(*args, **kwargs):
+            raise ValueError("No se encontró token")
         
-        with patch.object(auth_routes.auth_client, 'validate_token', return_value=mock_validation):
-            result = await auth_routes.auth_client.validate_token("test_company")
+        with patch.object(auth_routes.auth_client, 'get_auth_headers', side_effect=mock_get_headers):
+            result = await auth_routes.validate_token_internal("test_company")
             
             assert result["valid"] is False
-            assert "Token inválido" in result["message"] 
+            assert "Token no encontrado o expirado" in result["message"] 

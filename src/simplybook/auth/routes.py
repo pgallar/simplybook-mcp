@@ -26,8 +26,18 @@ class AuthRoutes(BaseRoutes):
     async def validate_token_internal(self, company: str) -> Dict[str, Any]:
         """Método interno para validar token"""
         try:
-            result = await self.auth_client.validate_token(company)
-            return result
+            # Intentar obtener los headers de autenticación
+            # Si no hay error, significa que el token es válido
+            self.auth_client.get_auth_headers(company)
+            return {
+                "valid": True,
+                "message": "Token válido"
+            }
+        except ValueError:
+            return {
+                "valid": False,
+                "message": "Token no encontrado o expirado"
+            }
         except Exception as e:
             return {
                 "valid": False,

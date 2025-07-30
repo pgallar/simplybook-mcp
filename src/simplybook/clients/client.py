@@ -34,7 +34,8 @@ class ClientsClient:
             params["on_page"] = on_page
             
         if search:
-            params["filter"] = {"search": search}
+            # El filtro debe enviarse como filter[search] y no como un objeto anidado
+            params["filter[search]"] = search
             
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get("/clients", params=params)
@@ -124,7 +125,6 @@ class ClientsClient:
             Dict con la lista paginada de membresías
         """
         params = {}
-        filters = {}
         
         if page is not None:
             params["page"] = page
@@ -133,25 +133,22 @@ class ClientsClient:
             params["on_page"] = on_page
             
         if client_id:
-            filters["client_id"] = client_id
+            params["filter[client_id]"] = client_id
             
         if service_id:
-            filters["service_id"] = service_id
+            params["filter[service_id]"] = service_id
             
         if service_start_date:
-            filters["service_start_date"] = service_start_date
+            params["filter[service_start_date]"] = service_start_date
             
         if count is not None:
-            filters["count"] = count
+            params["filter[count]"] = count
             
         if active_only is not None:
-            filters["active_only"] = 1 if active_only else 0
+            params["filter[active_only]"] = 1 if active_only else 0
             
         if search:
-            filters["search"] = search
-            
-        if filters:
-            params["filter"] = filters
+            params["filter[search]"] = search
             
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get("/clients/memberships", params=params)
