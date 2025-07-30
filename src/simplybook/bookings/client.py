@@ -60,39 +60,38 @@ class BookingsClient:
         if on_page is not None:
             params["on_page"] = on_page
             
-        # Construir filtros
-        filters = {}
-        
+        # Aplicar filtros en el formato correcto filter[key]=value
         if upcoming_only is not None:
-            filters["upcoming_only"] = 1 if upcoming_only else 0
+            params["filter[upcoming_only]"] = 1 if upcoming_only else 0
             
         if status:
-            filters["status"] = status
+            params["filter[status]"] = status
             
         if services:
-            filters["services"] = services
+            # Si services es una lista, convertir a formato filter[services][]=value
+            for i, service_id in enumerate(services):
+                params[f"filter[services][{i}]"] = service_id
             
         if providers:
-            filters["providers"] = providers
+            # Si providers es una lista, convertir a formato filter[providers][]=value
+            for i, provider_id in enumerate(providers):
+                params[f"filter[providers][{i}]"] = provider_id
             
         if client_id:
-            filters["client_id"] = client_id
+            params["filter[client_id]"] = client_id
             
         if date_from:
-            filters["date_from"] = date_from
+            params["filter[date_from]"] = date_from
             
         if date_to:
-            filters["date_to"] = date_to
+            params["filter[date_to]"] = date_to
             
         if search:
-            filters["search"] = search
+            params["filter[search]"] = search
             
         if additional_fields:
-            filters["additional_fields"] = additional_fields
-            
-        # Agregar filtros a los parámetros si existen
-        if filters:
-            params["filter"] = filters
+            for field, value in additional_fields.items():
+                params[f"filter[additional_fields][{field}]"] = value
             
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get("/bookings", params=params)

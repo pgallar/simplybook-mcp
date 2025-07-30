@@ -35,7 +35,6 @@ class NotesClient:
             Dict con la lista paginada de notas
         """
         params = {}
-        filters = {}
         
         if page is not None:
             params["page"] = page
@@ -44,25 +43,28 @@ class NotesClient:
             params["on_page"] = on_page
             
         if providers:
-            filters["providers"] = providers
+            # Si providers es una lista, convertir a formato filter[providers][]=value
+            for i, provider_id in enumerate(providers):
+                params[f"filter[providers][{i}]"] = provider_id
             
         if services:
-            filters["services"] = services
+            # Si services es una lista, convertir a formato filter[services][]=value
+            for i, service_id in enumerate(services):
+                params[f"filter[services][{i}]"] = service_id
             
         if types:
-            filters["types"] = types
+            # Si types es una lista, convertir a formato filter[types][]=value
+            for i, type_id in enumerate(types):
+                params[f"filter[types][{i}]"] = type_id
             
         if search:
-            filters["search"] = search
+            params["filter[search]"] = search
             
         if date_from:
-            filters["date_from"] = date_from
+            params["filter[date_from]"] = date_from
             
         if date_to:
-            filters["date_to"] = date_to
-            
-        if filters:
-            params["filter"] = filters
+            params["filter[date_to]"] = date_to
             
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get("/calendar-notes", params=params)
