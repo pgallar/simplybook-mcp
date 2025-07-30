@@ -25,9 +25,11 @@ class BaseRoutes:
         """
         try:
             # Verificar si ya tenemos un token válido
-            validation = await self.auth_client.validate_token(self.company)
-            if validation["valid"]:
+            try:
+                self.auth_client.get_auth_headers(self.company)
                 return True
+            except ValueError:
+                pass
                 
             # Si no hay token válido, autenticar
             auth_result = await self.auth_client.authenticate(
