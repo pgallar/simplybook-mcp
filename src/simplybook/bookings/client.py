@@ -25,7 +25,8 @@ class BookingsClient:
                               services: Optional[List[str]] = None,
                               providers: Optional[List[str]] = None,
                               client_id: Optional[str] = None,
-                              date: Optional[str] = None,
+                              date_from: Optional[str] = None,
+                              date_to: Optional[str] = None,
                               search: Optional[str] = None,
                               additional_fields: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -39,12 +40,16 @@ class BookingsClient:
             services: Lista de IDs de servicios para filtrar
             providers: Lista de IDs de proveedores para filtrar
             client_id: ID del cliente para filtrar
-            date: Fecha para filtrar (YYYY-MM-DD)
+            date_from: Fecha desde (YYYY-MM-DD)
+            date_to: Fecha hasta (YYYY-MM-DD)
             search: String de búsqueda (por código, datos del cliente)
-            additional_fields: Campos adicionales para filtrar
+            additional_fields: Campos adicionales para filtrar (&filter[additional_fields][field] = value)
             
         Returns:
-            Dict con la respuesta paginada de reservas
+            Dict con la respuesta paginada de reservas (AdminReportBookingEntity[])
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso al reporte de reservas
         """
         # Construir parámetros de query
         params = {}
@@ -73,8 +78,11 @@ class BookingsClient:
         if client_id:
             filters["client_id"] = client_id
             
-        if date:
-            filters["date"] = date
+        if date_from:
+            filters["date_from"] = date_from
+            
+        if date_to:
+            filters["date_to"] = date_to
             
         if search:
             filters["search"] = search
@@ -92,7 +100,36 @@ class BookingsClient:
             return response.json()
 
     async def create_booking(self, booking_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Crear una nueva reserva"""
+        """
+        Crear una nueva reserva y retornar el resultado (BookingResultEntity)
+        
+        Args:
+            booking_data: AdminBookingBuildEntity con los datos de la reserva:
+                - start_datetime: Fecha y hora de inicio (YYYY-MM-DD HH:mm:ss)
+                - end_datetime: Fecha y hora de fin (YYYY-MM-DD HH:mm:ss)
+                - location_id: ID de la ubicación
+                - category_id: ID de la categoría
+                - service_id: ID del servicio
+                - provider_id: ID del proveedor
+                - client_id: ID del cliente
+                - count: Cantidad para reserva grupal (opcional)
+                - recurring_settings: Configuración de recurrencia (opcional)
+                - additional_fields: Lista de valores de campos adicionales (opcional)
+                - products: Lista de productos/addons (opcional)
+                - client_membership_id: ID de membresía del cliente (opcional)
+                - batch_id: ID de lote para reservas múltiples/grupales (opcional)
+                - skip_membership: No usar membresía para esta reserva (opcional)
+                - user_status_id: ID del estado del usuario (opcional)
+                - accept_payment: Generar orden de pago para la reserva (opcional)
+                - payment_processor: Procesador de pago aceptado (opcional)
+            
+        Returns:
+            BookingResultEntity con el resultado de la reserva
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso a la reserva
+            BadRequest: Si los datos proporcionados son inválidos
+        """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post(
                 "/bookings", 
@@ -102,7 +139,38 @@ class BookingsClient:
             return response.json()
 
     async def edit_booking(self, booking_id: str, booking_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Editar una reserva existente"""
+        """
+        Modificar una reserva existente y retornar el resultado (BookingResultEntity)
+        
+        Args:
+            booking_id: ID de la reserva a modificar
+            booking_data: AdminBookingBuildEntity con los datos de la reserva:
+                - start_datetime: Fecha y hora de inicio (YYYY-MM-DD HH:mm:ss)
+                - end_datetime: Fecha y hora de fin (YYYY-MM-DD HH:mm:ss)
+                - location_id: ID de la ubicación
+                - category_id: ID de la categoría
+                - service_id: ID del servicio
+                - provider_id: ID del proveedor
+                - client_id: ID del cliente
+                - count: Cantidad para reserva grupal (opcional)
+                - recurring_settings: Configuración de recurrencia (opcional)
+                - additional_fields: Lista de valores de campos adicionales (opcional)
+                - products: Lista de productos/addons (opcional)
+                - client_membership_id: ID de membresía del cliente (opcional)
+                - batch_id: ID de lote para reservas múltiples/grupales (opcional)
+                - skip_membership: No usar membresía para esta reserva (opcional)
+                - user_status_id: ID del estado del usuario (opcional)
+                - accept_payment: Generar orden de pago para la reserva (opcional)
+                - payment_processor: Procesador de pago aceptado (opcional)
+            
+        Returns:
+            BookingResultEntity con el resultado de la reserva
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso a la reserva
+            BadRequest: Si los datos proporcionados son inválidos
+            NotFound: Si la reserva no existe
+        """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.put(
                 f"/bookings/{booking_id}",
@@ -397,16 +465,19 @@ class BookingsClient:
             mode: Modo de visualización ('day', 'week', 'provider' o 'service')
             upcoming_only: Solo reservas futuras
             status: Estado de las reservas (confirmed/confirmed_pending/pending/canceled)
-            services: Lista de IDs de servicios
-            providers: Lista de IDs de proveedores
-            client_id: ID del cliente
-            date_from: Fecha desde
-            date_to: Fecha hasta
-            search: Texto de búsqueda
-            additional_fields: Campos adicionales para filtrar
+            services: Lista de IDs de servicios para filtrar
+            providers: Lista de IDs de proveedores para filtrar
+            client_id: ID del cliente para filtrar
+            date_from: Fecha desde (YYYY-MM-DD)
+            date_to: Fecha hasta (YYYY-MM-DD)
+            search: Texto de búsqueda (por código, datos del cliente)
+            additional_fields: Campos adicionales para filtrar (&filter[additional_fields][field] = value)
             
         Returns:
-            Dict con los datos del calendario (Calendar_DataEntity)
+            Calendar_DataEntity con los datos del calendario
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso al reporte de reservas
         """
         params = {
             "mode": mode
@@ -464,20 +535,24 @@ class BookingsClient:
         Generar reporte detallado
         
         Args:
-            created_date_from: Fecha de creación desde
-            created_date_to: Fecha de creación hasta
-            date_from: Fecha desde
-            date_to: Fecha hasta
+            created_date_from: Fecha de creación desde (YYYY-MM-DD)
+            created_date_to: Fecha de creación hasta (YYYY-MM-DD)
+            date_from: Fecha desde (YYYY-MM-DD)
+            date_to: Fecha hasta (YYYY-MM-DD)
             event_id: ID del servicio
             unit_group_id: ID del proveedor
             client_id: ID del cliente
             booking_type: Tipo de reserva ('cancelled' o 'non_cancelled')
-            export_columns: Columnas a exportar
+            export_columns: Lista de columnas a exportar
             order_direction: Dirección de ordenamiento ('asc' o 'desc')
             order_field: Campo de ordenamiento
             
         Returns:
             Dict con el resultado de la generación del reporte
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso
+            BadRequest: Si los datos proporcionados son inválidos
         """
         data = {
             "filter": {},

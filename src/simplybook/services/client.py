@@ -1,5 +1,4 @@
 from typing import Dict, Any, Optional, List
-import httpx
 from ..http_client import LoggingHTTPClient
 
 class ServicesClient:
@@ -18,7 +17,11 @@ class ServicesClient:
             search: Texto de búsqueda
             
         Returns:
-            Dict con la lista paginada de servicios
+            Dict con la lista paginada de servicios (ServiceEntity[])
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso al servicio
+            NotFound: Si el servicio no existe
         """
         params = {}
         if search:
@@ -37,7 +40,11 @@ class ServicesClient:
             service_id: ID del servicio
             
         Returns:
-            Dict con los detalles del servicio
+            ServiceEntity con los detalles del servicio
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso al servicio
+            NotFound: Si el servicio no existe
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(f"/services/{service_id}")
@@ -45,8 +52,8 @@ class ServicesClient:
             return response.json()
 
     async def get_service_products(self,
-                                 service_id: str,
-                                 product_type: Optional[str] = None) -> Dict[str, Any]:
+                                service_id: str,
+                                product_type: Optional[str] = None) -> Dict[str, Any]:
         """
         Obtener productos asociados a un servicio
         
@@ -55,7 +62,7 @@ class ServicesClient:
             product_type: Tipo de producto ('product' o 'attribute')
             
         Returns:
-            Dict con la lista de productos y sus cantidades por defecto
+            Service_ProductEntity con la lista de productos y sus cantidades por defecto
         """
         params = {
             "filter": {
@@ -76,10 +83,21 @@ class ServicesClient:
         Crear un nuevo servicio
         
         Args:
-            service_data: Datos del servicio (name, description, price, etc.)
+            service_data: ServiceWriteableEntity con los datos del servicio:
+                - name: Nombre del servicio
+                - description: Descripción del servicio
+                - price: Precio del servicio
+                - deposit_price: Precio del depósito
+                - tax_id: ID del impuesto
+                - duration: Duración en minutos
+                - is_visible: Si el servicio es visible
             
         Returns:
-            Dict con los detalles del servicio creado
+            ServiceEntity con los detalles del servicio creado
+            
+        Throws:
+            BadRequest: Si los datos proporcionados son inválidos
+            AccessDenied: Si el usuario no tiene acceso para crear servicios
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post("/services", json=service_data)
@@ -91,11 +109,23 @@ class ServicesClient:
         Actualizar un servicio existente
         
         Args:
-            service_id: ID del servicio
-            service_data: Datos actualizados del servicio
+            service_id: ID del servicio a actualizar
+            service_data: ServiceWriteableEntity con los datos del servicio:
+                - name: Nombre del servicio
+                - description: Descripción del servicio
+                - price: Precio del servicio
+                - deposit_price: Precio del depósito
+                - tax_id: ID del impuesto
+                - duration: Duración en minutos
+                - is_visible: Si el servicio es visible
             
         Returns:
-            Dict con los detalles del servicio actualizado
+            ServiceEntity con los detalles del servicio actualizado
+            
+        Throws:
+            BadRequest: Si los datos proporcionados son inválidos
+            NotFound: Si el servicio no existe
+            AccessDenied: Si el usuario no tiene acceso para actualizar el servicio
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.put(f"/services/{service_id}", json=service_data)
@@ -107,7 +137,11 @@ class ServicesClient:
         Eliminar un servicio
         
         Args:
-            service_id: ID del servicio
+            service_id: ID del servicio a eliminar
+            
+        Throws:
+            AccessDenied: Si el usuario no tiene acceso para eliminar el servicio
+            NotFound: Si el servicio no existe
         """
         async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.delete(f"/services/{service_id}")
@@ -140,7 +174,7 @@ class ServicesClient:
         Obtener el primer día laboral para un performer específico
         Usa getFirstWorkingDay() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
                 f"{self.base_url}/units/{performer_id}/first-working-day",
                 headers=self.headers
@@ -153,7 +187,7 @@ class ServicesClient:
         Obtener calendario de trabajo para un performer
         Usa getWorkCalendar() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
                 f"{self.base_url}/units/{performer_id}/work-calendar",
                 headers=self.headers,
@@ -170,7 +204,7 @@ class ServicesClient:
         Obtener slots de tiempo disponibles
         Usa getTimeSlots() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.get(
                 f"{self.base_url}/time-slots",
                 headers=self.headers,
@@ -188,7 +222,7 @@ class ServicesClient:
         Crear una reserva
         Usa addBooking() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.post(
                 f"{self.base_url}/bookings",
                 json=booking_data,
@@ -218,7 +252,7 @@ class ServicesClient:
         Cancelar una reserva
         Usa cancelBooking() como se muestra en la documentación
         """
-        async with httpx.AsyncClient() as client:
+        async with LoggingHTTPClient(self.base_url, self.headers) as client:
             response = await client.delete(
                 f"{self.base_url}/bookings/{booking_id}",
                 headers=self.headers
