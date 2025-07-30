@@ -6,7 +6,7 @@ class BookingsRoutes(BaseRoutes):
     def register_tools(self, mcp):
         @mcp.tool()
         async def get_bookings_list() -> Dict[str, Any]:
-            """Obtener lista de reservas"""
+            """Obtener lista de reservas (método básico)"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
@@ -20,6 +20,59 @@ class BookingsRoutes(BaseRoutes):
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo reservas: {str(e)}"}
+
+        @mcp.tool()
+        async def get_booking_list(page: int = None, 
+                                  on_page: int = None,
+                                  upcoming_only: bool = None,
+                                  status: str = None,
+                                  services: list = None,
+                                  providers: list = None,
+                                  client_id: str = None,
+                                  date: str = None,
+                                  search: str = None,
+                                  additional_fields: dict = None) -> Dict[str, Any]:
+            """
+            Obtener lista de reservas con filtros avanzados
+            
+            Args:
+                page: Número de página para paginación
+                on_page: Elementos por página
+                upcoming_only: Solo reservas futuras (true/false)
+                status: Estado de la reserva (confirmed/confirmed_pending/pending/canceled)
+                services: Lista de IDs de servicios para filtrar
+                providers: Lista de IDs de proveedores para filtrar
+                client_id: ID del cliente para filtrar
+                date: Fecha para filtrar (YYYY-MM-DD)
+                search: String de búsqueda (por código, datos del cliente)
+                additional_fields: Campos adicionales para filtrar (dict)
+                
+            Returns:
+                Dict con la respuesta paginada de reservas
+            """
+            try:
+                if not await self.ensure_authenticated():
+                    return {"error": "No se pudo autenticar"}
+                    
+                self.client = BookingsClient(self.get_auth_headers())
+                result = await self.client.get_booking_list(
+                    page=page,
+                    on_page=on_page,
+                    upcoming_only=upcoming_only,
+                    status=status,
+                    services=services,
+                    providers=providers,
+                    client_id=client_id,
+                    date=date,
+                    search=search,
+                    additional_fields=additional_fields
+                )
+                return {
+                    "success": True,
+                    "result": result
+                }
+            except Exception as e:
+                return {"error": f"Error obteniendo reservas filtradas: {str(e)}"}
 
         @mcp.tool()
         async def create_booking(booking_data: Dict[str, Any]) -> Dict[str, Any]:

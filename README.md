@@ -94,6 +94,16 @@ simplybook-mcp/
 ├── src/                                # Código fuente
 │   ├── main.py                         # Punto de entrada del servidor FastMCP
 │   └── simplybook/                     # Módulos de SimplyBook
+├── tests/                              # Tests organizados por categorías
+│   ├── unit/                           # Tests unitarios
+│   ├── integration/                    # Tests de integración
+│   ├── e2e/                           # Tests end-to-end
+│   ├── utils/                         # Scripts de utilidad y verificación
+│   └── README.md                      # Documentación de tests
+├── demos/                              # Scripts de demostración
+│   ├── demo_booking_list_filters.py   # Demo de filtros avanzados
+│   └── README.md                      # Documentación de demos
+├── logs/                               # Logs del sistema
 ├── docker-compose.yml                  # Configuración de Docker Compose
 ├── Dockerfile                          # Imagen de Docker
 ├── requirements.txt                    # Dependencias del proyecto
@@ -109,11 +119,43 @@ Una vez que el servidor esté ejecutándose, puedes acceder a los endpoints defi
 ### Comandos de Prueba
 
 ```
-@simplybook authenticate tu_company tu_login tu_password
 @simplybook get_services_list
 @simplybook get_performers_list
 @simplybook get_bookings
+@simplybook get_booking_list
 ```
+
+### Tests y Demos
+
+El proyecto incluye tests organizados por categorías y scripts de demostración:
+
+#### Tests Organizados (`tests/`)
+```bash
+# Tests unitarios (no requieren servidor)
+pytest tests/unit/
+
+# Tests de integración
+pytest tests/integration/
+
+# Tests end-to-end (requieren servidor)
+python3 tests/e2e/test_api_endpoints.py
+python3 tests/e2e/test_booking_list_filters.py
+
+# Scripts de utilidad
+python3 tests/utils/check_server_status.py
+python3 tests/utils/check_available_tools.py
+python3 tests/utils/quick_test_bookings.py
+```
+
+#### Demos (`demos/`)
+```bash
+# Demo de filtros avanzados
+python3 demos/demo_booking_list_filters.py
+```
+
+Para más información:
+- **Tests**: Consulta [tests/README.md](tests/README.md)
+- **Demos**: Consulta [demos/README.md](demos/README.md)
 
 ## Documentación Adicional
 

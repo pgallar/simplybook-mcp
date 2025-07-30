@@ -1,149 +1,205 @@
-# Tests para SimplyBook MCP Server
+# Tests del Servidor MCP SimplyBook
 
-Este directorio contiene todos los tests unitarios y de integración para el servidor MCP de SimplyBook.
+Esta carpeta contiene todos los tests organizados por categorías para el servidor MCP de SimplyBook.
 
-## Estructura de Tests
+## 📁 Estructura de Tests
 
 ```
 tests/
-├── __init__.py                    # Inicializador del paquete
-├── test_auth_client.py           # Tests del cliente de autenticación
-├── test_services_client.py       # Tests del cliente de servicios
-├── test_auth_routes.py           # Tests de las rutas de autenticación
-├── test_services_routes.py       # Tests de las rutas de servicios
-├── test_integration.py           # Tests de integración con API real
-└── README.md                     # Esta documentación
+├── unit/           # Tests unitarios
+├── integration/    # Tests de integración
+├── e2e/           # Tests end-to-end
+├── utils/         # Scripts de utilidad y verificación
+└── README.md      # Este archivo
 ```
 
-## Tipos de Tests
+## 🧪 Tests Unitarios (`unit/`)
 
-### 1. Tests Unitarios
-- **`test_auth_client.py`**: Prueba todas las funciones del cliente de autenticación
-- **`test_services_client.py`**: Prueba todas las funciones del cliente de servicios
-- **`test_auth_routes.py`**: Prueba las herramientas MCP de autenticación
-- **`test_services_routes.py`**: Prueba las herramientas MCP de servicios
+Tests que verifican componentes individuales del sistema de forma aislada.
 
-### 2. Tests de Integración
-- **`test_integration.py`**: Prueba la conexión real con la API de SimplyBook.me
+### Archivos:
+- `test_auth_client.py` - Tests del cliente de autenticación
+- `test_auth_routes.py` - Tests de las rutas de autenticación
+- `test_services_client.py` - Tests del cliente de servicios
+- `test_services_routes.py` - Tests de las rutas de servicios
 
-## Ejecutar Tests
-
-### Tests Unitarios
+### Ejecución:
 ```bash
 # Ejecutar todos los tests unitarios
+pytest tests/unit/
+
+# Ejecutar tests específicos
+pytest tests/unit/test_auth_client.py
+pytest tests/unit/test_services_routes.py
+```
+
+## 🔗 Tests de Integración (`integration/`)
+
+Tests que verifican la interacción entre múltiples componentes.
+
+### Archivos:
+- `test_integration.py` - Tests de integración general
+
+### Ejecución:
+```bash
+# Ejecutar tests de integración
+pytest tests/integration/
+```
+
+## 🌐 Tests End-to-End (`e2e/`)
+
+Tests que verifican el flujo completo del sistema, incluyendo la API externa de SimplyBook.
+
+### Archivos:
+- `test_api_endpoints.py` - Tests de todos los endpoints de la API
+- `test_booking_list_filters.py` - Tests de filtros avanzados de reservas
+- `test_authenticated_bookings.py` - Tests de autenticación y reservas
+- `test_tomorrow_bookings.py` - Tests de reservas de mañana
+- `test_sse_client.py` - Tests del cliente SSE
+- `test_double_auth.py` - Tests de autenticación múltiple
+- `test_403_error.py` - Tests de manejo de errores 403
+- `test_bookings_client.py` - Tests del cliente de bookings
+- `test_invalid_parameters.py` - Tests de parámetros inválidos
+- `test_logging_control.py` - Tests de control de logging
+
+### Ejecución:
+```bash
+# Ejecutar todos los tests e2e
+pytest tests/e2e/
+
+# Ejecutar tests específicos
+python3 tests/e2e/test_api_endpoints.py
+python3 tests/e2e/test_booking_list_filters.py
+```
+
+## 🛠️ Scripts de Utilidad (`utils/`)
+
+Scripts para verificar el estado del sistema y debugging.
+
+### Archivos:
+- `check_available_tools.py` - Verificar herramientas disponibles en el servidor MCP
+- `check_api_logs.py` - Analizar logs de la API
+- `check_server_status.py` - Verificar estado del servidor
+- `quick_test_bookings.py` - Test rápido de reservas
+
+### Ejecución:
+```bash
+# Verificar estado del servidor
+python3 tests/utils/check_server_status.py
+
+# Ver herramientas disponibles
+python3 tests/utils/check_available_tools.py
+
+# Analizar logs
+python3 tests/utils/check_api_logs.py
+
+# Test rápido
+python3 tests/utils/quick_test_bookings.py
+```
+
+## 🚀 Ejecución Completa
+
+### Prerequisitos
+1. Servidor MCP ejecutándose en Docker
+2. Variables de entorno configuradas en `.env`
+3. Python 3.11+ con dependencias instaladas
+
+### Ejecutar Todos los Tests
+```bash
+# Tests unitarios
+pytest tests/unit/
+
+# Tests de integración
+pytest tests/integration/
+
+# Tests e2e (requieren servidor ejecutándose)
+python3 tests/e2e/test_api_endpoints.py
+python3 tests/e2e/test_booking_list_filters.py
+
+# Verificar estado
+python3 tests/utils/check_server_status.py
+```
+
+### Scripts de Automatización
+```bash
+# Ejecutar tests unitarios e integración
 ./run_tests.sh
 
-# O ejecutar directamente con pytest
-pytest tests/ -v --tb=short --asyncio-mode=auto
-```
-
-### Tests de Integración
-```bash
-# Ejecutar tests de integración (requiere credenciales reales)
+# Ejecutar tests de integración completos
 ./run_integration_tests.sh
-
-# O ejecutar directamente
-pytest tests/test_integration.py -v --tb=short --asyncio-mode=auto
 ```
 
-### Tests Específicos
+## 📊 Categorías de Tests
+
+### 🔐 Autenticación
+- `tests/unit/test_auth_client.py`
+- `tests/unit/test_auth_routes.py`
+- `tests/e2e/test_authenticated_bookings.py`
+- `tests/e2e/test_double_auth.py`
+- `tests/e2e/test_403_error.py`
+
+### 📅 Reservas
+- `tests/e2e/test_booking_list_filters.py`
+- `tests/e2e/test_bookings_client.py`
+- `tests/e2e/test_tomorrow_bookings.py`
+- `tests/utils/quick_test_bookings.py`
+
+### 🔧 API y Endpoints
+- `tests/e2e/test_api_endpoints.py`
+- `tests/e2e/test_invalid_parameters.py`
+- `tests/e2e/test_sse_client.py`
+
+### 📝 Logging y Monitoreo
+- `tests/e2e/test_logging_control.py`
+- `tests/utils/check_api_logs.py`
+- `tests/utils/check_server_status.py`
+
+### 🛠️ Servicios
+- `tests/unit/test_services_client.py`
+- `tests/unit/test_services_routes.py`
+
+### 🔗 Integración
+- `tests/integration/test_integration.py`
+
+## 📝 Notas Importantes
+
+1. **Tests Unitarios**: No requieren servidor ejecutándose
+2. **Tests E2E**: Requieren servidor MCP ejecutándose en Docker
+3. **Autenticación**: Los tests e2e usan autenticación interna automática
+4. **Logging**: El logging de API se puede controlar via `ENABLE_API_LOGGING`
+5. **SSE**: Los tests usan el endpoint SSE (`http://localhost:8001/sse`)
+
+## 🔧 Troubleshooting
+
+### Error de Conexión en Tests E2E
 ```bash
-# Ejecutar solo tests de autenticación
-pytest tests/test_auth_client.py -v
+# Verificar que el servidor esté ejecutándose
+python3 tests/utils/check_server_status.py
 
-# Ejecutar solo tests de servicios
-pytest tests/test_services_client.py -v
-
-# Ejecutar un test específico
-pytest tests/test_auth_client.py::TestAuthClient::test_authenticate_success -v
+# Reiniciar el servidor si es necesario
+docker compose down && docker compose up --build -d
 ```
 
-## Configuración
-
-### Variables de Entorno para Tests de Integración
-Los tests de integración requieren credenciales reales de SimplyBook.me:
-
+### Error de Autenticación
 ```bash
-SIMPLYBOOK_COMPANY=tu_company_login
-SIMPLYBOOK_LOGIN=tu_user_login
-SIMPLYBOOK_PASSWORD=tu_password
-```
-
-Estas variables se cargan automáticamente desde el archivo `.env` cuando ejecutas `./run_integration_tests.sh`.
-
-## Problemas Identificados y Solucionados
-
-### 1. Error 403 en Autenticación
-**Problema**: `{"success":false,"message":"Error HTTP: 403"}`
-**Causa**: URL o endpoint incorrecto para autenticación
-**Solución**: Actualizado a usar `https://user-api-v2.simplybook.me/admin/auth`
-
-### 2. Error 404 en get_bookings
-**Problema**: `Client error '404 Not Found' for url '.../getBookings'`
-**Causa**: Endpoint incorrecto
-**Solución**: Cambiado a `/getBookingList`
-
-### 3. Error en get_bookings_list
-**Problema**: `'BookingsClient' object has no attribute 'get_bookings_list'`
-**Causa**: Método faltante en BookingsClient
-**Solución**: Agregado método `get_bookings_list()`
-
-### 4. Error en get_calendar_data
-**Problema**: `No se pudo autenticar`
-**Causa**: Método faltante en BookingsClient
-**Solución**: Agregado método `get_calendar_data()`
-
-### 5. Error en validate_token
-**Problema**: `Token inválido: 404`
-**Causa**: Endpoint de validación incorrecto
-**Solución**: Actualizado endpoint de validación
-
-## Cobertura de Tests
-
-Los tests cubren:
-
-- ✅ Autenticación (éxito y fallo)
-- ✅ Validación de tokens
-- ✅ Gestión de tokens (guardar, cargar, eliminar)
-- ✅ Obtención de servicios
-- ✅ Obtención de performers
-- ✅ Obtención de reservas
-- ✅ Creación de reservas
-- ✅ Cancelación de reservas
-- ✅ Manejo de errores HTTP
-- ✅ Manejo de excepciones
-
-## Debugging
-
-### Ver Logs Detallados
-```bash
-# Ejecutar con logs detallados
-pytest tests/ -v -s --tb=long
-
-# Ejecutar un test específico con logs
-pytest tests/test_integration.py::TestIntegration::test_real_authentication -v -s
-```
-
-### Verificar Configuración
-```bash
-# Verificar que las credenciales estén configuradas
+# Verificar variables de entorno
 cat .env
 
-# Verificar que pytest esté instalado
-pytest --version
+# Probar autenticación manual
+python3 tests/e2e/test_authenticated_bookings.py
 ```
 
-## Contribuir
-
-Al agregar nuevas funcionalidades:
-
-1. **Crear tests unitarios** para las nuevas funciones
-2. **Crear tests de integración** si es necesario
-3. **Actualizar esta documentación** con los nuevos tests
-4. **Ejecutar todos los tests** antes de hacer commit
-
+### Error en Tests Unitarios
 ```bash
-# Ejecutar todos los tests antes de commit
-./run_tests.sh
-./run_integration_tests.sh
-``` 
+# Verificar dependencias
+pip install -r requirements.txt
+
+# Ejecutar con verbose
+pytest tests/unit/ -v
+```
+
+## 📚 Documentación Relacionada
+
+- **Demos**: Ver carpeta `demos/` para ejemplos de uso
+- **Configuración**: Ver `README.md` principal para configuración del servidor
+- **Docker**: Ver `DOCKER_SETUP.md` para configuración de Docker 
