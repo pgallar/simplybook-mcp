@@ -157,3 +157,37 @@ class ServicesRoutes(BaseRoutes):
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo reservas: {str(e)}"}
+
+        @mcp.tool(
+            description="Obtener productos asociados a un servicio",
+            tags={"services", "products"}
+        )
+        async def get_service_products(
+            service_id: Annotated[str, Field(description="ID del servicio")],
+            product_type: Optional[Annotated[str, Field(description="Tipo de producto ('product' o 'attribute')")]] = None
+        ) -> Dict[str, Any]:
+            """
+            Obtener productos asociados a un servicio
+            
+            Args:
+                service_id: ID del servicio
+                product_type: Tipo de producto ('product' o 'attribute')
+            
+            Returns:
+                Dict con la lista de productos y sus cantidades por defecto
+            """
+            try:
+                if not await self.ensure_authenticated():
+                    return {"error": "No se pudo autenticar"}
+                    
+                self.client = ServicesClient(self.get_auth_headers())
+                result = await self.client.get_service_products(
+                    service_id=service_id,
+                    product_type=product_type
+                )
+                return {
+                    "success": True,
+                    "result": result
+                }
+            except Exception as e:
+                return {"error": f"Error obteniendo productos del servicio: {str(e)}"}

@@ -213,7 +213,10 @@ class BookingsRoutes(BaseRoutes):
         )
         async def get_available_slots(
             service_id: Annotated[str, Field(description="ID del servicio")],
-            date: Annotated[str, Field(description="Fecha para buscar slots (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]
+            provider_id: Annotated[str, Field(description="ID del proveedor")],
+            date: Annotated[str, Field(description="Fecha para buscar slots (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")],
+            count: Optional[Annotated[int, Field(description="Cantidad para reserva grupal")]] = None,
+            products: Optional[Annotated[List[int], Field(description="Lista de IDs de productos adicionales")]] = None
         ) -> Dict[str, Any]:
             """Obtener horarios disponibles para un servicio en una fecha"""
             try:
@@ -221,7 +224,13 @@ class BookingsRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = BookingsClient(self.get_auth_headers())
-                slots = await self.client.get_available_slots(service_id, date)
+                slots = await self.client.get_available_slots(
+                    service_id=service_id,
+                    provider_id=provider_id,
+                    date=date,
+                    count=count,
+                    products=products
+                )
                 return {
                     "success": True,
                     "slots": slots
@@ -234,8 +243,16 @@ class BookingsRoutes(BaseRoutes):
             tags={"bookings", "calendar"}
         )
         async def get_calendar_data(
-            start_date: Annotated[str, Field(description="Fecha de inicio (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")],
-            end_date: Annotated[str, Field(description="Fecha de fin (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]
+            mode: Annotated[str, Field(description="Modo de visualización ('day', 'week', 'provider' o 'service')")],
+            upcoming_only: Optional[Annotated[bool, Field(description="Solo reservas futuras")]] = None,
+            status: Optional[Annotated[str, Field(description="Estado de las reservas", pattern="^(confirmed|confirmed_pending|pending|canceled)$")]] = None,
+            services: Optional[Annotated[List[str], Field(description="Lista de IDs de servicios")]] = None,
+            providers: Optional[Annotated[List[str], Field(description="Lista de IDs de proveedores")]] = None,
+            client_id: Optional[Annotated[str, Field(description="ID del cliente")]] = None,
+            date_from: Optional[Annotated[str, Field(description="Fecha desde (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]] = None,
+            date_to: Optional[Annotated[str, Field(description="Fecha hasta (YYYY-MM-DD)", pattern="^\\d{4}-\\d{2}-\\d{2}$")]] = None,
+            search: Optional[Annotated[str, Field(description="Texto de búsqueda")]] = None,
+            additional_fields: Optional[Dict[str, Any]] = None
         ) -> Dict[str, Any]:
             """Obtener datos del calendario para un período"""
             try:
@@ -243,7 +260,18 @@ class BookingsRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = BookingsClient(self.get_auth_headers())
-                calendar_data = await self.client.get_calendar_data(start_date, end_date)
+                calendar_data = await self.client.get_calendar_data(
+                    mode=mode,
+                    upcoming_only=upcoming_only,
+                    status=status,
+                    services=services,
+                    providers=providers,
+                    client_id=client_id,
+                    date_from=date_from,
+                    date_to=date_to,
+                    search=search,
+                    additional_fields=additional_fields
+                )
                 return {
                     "success": True,
                     "calendar_data": calendar_data
