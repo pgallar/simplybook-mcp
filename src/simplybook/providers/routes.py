@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from ..base_routes import BaseRoutes
 from .client import ProvidersClient
 from pydantic import Field
@@ -10,18 +10,23 @@ class ProvidersRoutes(BaseRoutes):
             description="Obtener lista de proveedores",
             tags={"providers", "list"}
         )
-        async def get_providers_list() -> Dict[str, Any]:
+        async def get_providers(
+            search: Optional[Annotated[str, Field(description="Texto de búsqueda")]] = None,
+            service_id: Optional[Annotated[str, Field(description="ID del servicio para filtrar")]] = None
+        ) -> Dict[str, Any]:
             """Obtener lista de proveedores"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ProvidersClient(self.get_auth_headers())
-                providers = await self.client.get_providers_list()
+                result = await self.client.get_providers(
+                    search=search,
+                    service_id=service_id
+                )
                 return {
                     "success": True,
-                    "providers": providers,
-                    "count": len(providers)
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo proveedores: {str(e)}"}
@@ -39,10 +44,10 @@ class ProvidersRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ProvidersClient(self.get_auth_headers())
-                provider = await self.client.get_provider(provider_id)
+                result = await self.client.get_provider(provider_id)
                 return {
                     "success": True,
-                    "provider": provider
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo proveedor: {str(e)}"}
@@ -119,32 +124,29 @@ class ProvidersRoutes(BaseRoutes):
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ProvidersClient(self.get_auth_headers())
-                result = await self.client.delete_provider(provider_id)
+                await self.client.delete_provider(provider_id)
                 return {
                     "success": True,
-                    "result": result
+                    "message": "Proveedor eliminado correctamente"
                 }
             except Exception as e:
                 return {"error": f"Error eliminando proveedor: {str(e)}"}
 
         @mcp.tool(
-            description="Obtener ubicaciones de un proveedor",
+            description="Obtener lista de ubicaciones",
             tags={"providers", "locations"}
         )
-        async def get_provider_locations(
-            provider_id: Annotated[str, Field(description="ID del proveedor")]
-        ) -> Dict[str, Any]:
-            """Obtener ubicaciones de un proveedor"""
+        async def get_locations() -> Dict[str, Any]:
+            """Obtener lista de ubicaciones"""
             try:
                 if not await self.ensure_authenticated():
                     return {"error": "No se pudo autenticar"}
                     
                 self.client = ProvidersClient(self.get_auth_headers())
-                locations = await self.client.get_provider_locations(provider_id)
+                result = await self.client.get_locations()
                 return {
                     "success": True,
-                    "locations": locations,
-                    "count": len(locations)
+                    "result": result
                 }
             except Exception as e:
                 return {"error": f"Error obteniendo ubicaciones: {str(e)}"}
